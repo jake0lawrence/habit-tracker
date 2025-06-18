@@ -1,0 +1,23 @@
+<table>
+  <thead>
+    <tr>
+      {% for key, label in habits.items() %}
+        <th>{{ label }}</th>
+      {% endfor %}
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      {% for key in habits %}
+        {% set completed = data.get(today, {}).get(key) %}
+        <td>
+          <form hx-post="/log/{{ key }}" hx-target="#habits" hx-swap="outerHTML">
+            <button class="{{ 'done' if completed else '' }}">
+              {{ '✓' if completed else 'Log' }}
+            </button>
+          </form>
+        </td>
+      {% endfor %}
+    </tr>
+  </tbody>
+</table>
