@@ -24,34 +24,40 @@ HABITS = {
     "yoga": "Yoga",
     "cardio": "Cardio",
     "weights": "Weights",
-    "read": "Read"
+    "read": "Read",
 }
 
 
 # Load habit data from file
-def load_data():
+def load_data() -> dict:
+    """Read the habit data JSON file if it exists."""
     if os.path.exists(DATA_FILE):
-        with open(DATA_FILE) as f:
-            return json.load(f)
+        try:
+            with open(DATA_FILE) as f:
+                return json.load(f)
+        except json.JSONDecodeError:
+            # Malformed file, start fresh
+            return {}
     return {}
 
 
 # Save habit data to file
-def save_data(data):
+def save_data(data: dict) -> None:
+    """Write habit data to the JSON file."""
     with open(DATA_FILE, "w") as f:
-        json.dump(data, f)
+        json.dump(data, f, indent=2)
 
 
 @app.command()
-def log(habit: str, minutes: int = 1):
+def log(habit: str, minutes: int = 1) -> None:
     """
     Log a habit with optional minutes (default: 1).
     Example: python habit.py log med 5
     """
     if habit not in HABITS:
-        typer.echo(f"❌ Unknown habit key: {habit}")
-        typer.echo(f"➡️ Valid keys: {', '.join(HABITS)}")
-        raise typer.Exit()
+        raise typer.BadParameter(
+            f"Unknown habit key: {habit}. Valid keys: {', '.join(HABITS)}"
+        )
 
     data = load_data()
     today = str(datetime.date.today())
@@ -62,7 +68,7 @@ def log(habit: str, minutes: int = 1):
 
 
 @app.command()
-def mood(score: int = typer.Argument(..., min=1, max=5)):
+def mood(score: int = typer.Argument(..., min=1, max=5)) -> None:
     """
     Log today's mood on a scale from 1 to 5.
     Example: python habit.py mood 4
@@ -76,7 +82,7 @@ def mood(score: int = typer.Argument(..., min=1, max=5)):
 
 
 @app.command()
-def show():
+def show() -> None:
     """
     Show this week's habit grid with checkmarks.
     Example: python habit.py show
