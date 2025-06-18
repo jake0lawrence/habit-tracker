@@ -18,12 +18,50 @@ I needed a friction‑free way to log six core habits and a 1‑5 mood score wit
 
 The CLI writes plain JSON/SQLite so I own the data and can graph it anywhere.
 
-## Quick start
+## Installation
+
+### 🔧 Local Development Setup
 
 ```bash
+# Clone the repo
 git clone https://github.com/jake0lawrence/habit-track-cli.git
 cd habit-track-cli
-python -m venv .venv && source .venv/bin/activate
+
+# Create and activate a virtual environment
+python -m venv .venv
+source .venv/bin/activate
+
+# Install dependencies
 pip install -r requirements.txt
-python habit.py show     # view the weekly grid
+
+# Run the app
+python habit.py show
+```
+## Usage
+
+| Habit | Key | Frequency |
+|-------|-----|-----------|
+| Meditation | `med` | Daily |
+| Gratitude Journal | `grat` | Daily |
+| Yoga | `yoga` | 3×/week |
+| Cardio | `cardio` | 3×/week |
+| Weight Lifting | `weights` | 3×/week |
+| Reading | `read` | 3×/week |
+
+### Example commands
+
+```bash
+python habit.py log med 5     # ✅ logs 5 mins of meditation
+python habit.py mood 4        # 🧠 logs a 4/5 mood
+python habit.py show          # 📊 weekly grid
+```
+## Demo
+
+<!-- TODO: replace with real demo -->
+![CLI demo](docs/demo.gif)
+
+## Documentation
+
+- [Design Notes](docs/architecture.md)
+
 
