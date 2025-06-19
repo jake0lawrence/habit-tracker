@@ -1,0 +1,21 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>📜 Journal History</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+<h1>📜 Journal History</h1>
+{% if entries %}
+  {% for entry in entries %}
+    <div class="tile">
+      <h3>{{ entry.date }}</h3>
+      <pre>{{ entry.text }}</pre>
+    </div>
+  {% endfor %}
+{% else %}
+  <p>No entries found.</p>
+{% endif %}
+</body>
+</html>

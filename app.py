@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect
+from flask import Flask, render_template, request, redirect, send_file
 import json, os, datetime, csv
 from pathlib import Path
 from io import StringIO
@@ -158,13 +158,13 @@ Reflect on:
 
 
 def enrich_prompt_with_ai(prompt):
-    api_key = os.getenv("OPENAI_API_KEY")
-    if not api_key:
+    openai.api_key = os.getenv("OPENAI_API_KEY")
+    model = os.getenv("AI_MODEL", "gpt-4")
+    if not openai.api_key:
         return prompt
-    openai.api_key = api_key
     try:
         completion = openai.ChatCompletion.create(
-            model="gpt-4",
+            model=model,
             messages=[
                 {"role": "system", "content": "You are a thoughtful self-reflection assistant."},
                 {"role": "user", "content": prompt + "\nPlease expand this into a personal reflection prompt."},
@@ -309,6 +309,24 @@ def journal():
     return render_template("journal.html", prompt=ai_prompt)
 
 
+@app.route("/download-journal")
+def download_journal():
+    format = request.args.get("format", "txt")
+    path = JOURNAL_FILE
+
+    if not path.exists():
+        return "No journal entries yet.", 404
+
+    if format == "zip":
+        from zipfile import ZipFile
+        zip_path = Path("journal.zip")
+        with ZipFile(zip_path, "w") as zipf:
+            zipf.write(path)
+        return send_file(zip_path, as_attachment=True, mimetype="application/zip")
+    else:
+        return send_file(path, as_attachment=True, mimetype="text/plain")
+
+
 @app.route("/journal-entry", methods=["POST"])
 def save_journal():
     entry = request.form["entry"]
@@ -316,6 +334,31 @@ def save_journal():
     with open(JOURNAL_FILE, "a") as f:
         f.write(f"\n## {today}\n{entry.strip()}\n")
     return redirect("/journal")
+
+
+@app.route("/journal-history")
+def journal_history():
+    if not JOURNAL_FILE.exists():
+        return render_template("journal_history.html", entries=[])
+
+    with open(JOURNAL_FILE, "r") as f:
+        lines = f.readlines()
+
+    entries = []
+    current = {"date": None, "text": ""}
+
+    for line in lines:
+        if line.startswith("## "):
+            if current["date"]:
+                entries.append(current)
+            current = {"date": line.replace("##", "").strip(), "text": ""}
+        else:
+            current["text"] += line
+
+    if current["date"]:
+        entries.append(current)
+
+    return render_template("journal_history.html", entries=entries[::-1])
 
 
 @app.route("/settings", methods=["GET", "POST"])

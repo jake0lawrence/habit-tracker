@@ -14,6 +14,8 @@ services:
   envVars:
     - key: APP_MODE
       value: prod
+    - key: AI_MODEL
+      value: gpt-3.5-turbo
     # Uncomment if using Postgres
     # - key: DATABASE_URL
     #   fromDatabase:
