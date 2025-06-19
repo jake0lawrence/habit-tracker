@@ -78,29 +78,26 @@
     {% endfor %}
 
     <div class="chart-block">
-      <h3>Mood Over Time</h3>
+      <h3>🧠 Mood Score</h3>
       <canvas id="mood-chart"></canvas>
       <script>
-        const moodSeries = {{ mood_series | tojson }};
-        const ctx = document.getElementById('mood-chart').getContext('2d');
-        const lineColor = document.body.classList.contains('dark') ? '#ffffff' : '#222222';
-        new Chart(ctx, {
+        new Chart(document.getElementById("mood-chart"), {
           type: 'line',
           data: {
-            labels: moodSeries.map(p => p.date),
+            labels: {{ mood_series | map(attribute='date') | list | tojson }},
             datasets: [{
-              label: 'Mood',
-              data: moodSeries.map(p => p.score),
-              tension: 0.3,
+              label: 'Mood Score',
+              data: {{ mood_series | map(attribute='score') | list | tojson }},
+              borderColor: '#f56565',
               fill: false,
-              borderColor: lineColor,
-              backgroundColor: lineColor
+              tension: 0.3
             }]
           },
           options: {
             responsive: true,
-            scales: { y: { beginAtZero: true, max: 5 } },
-            plugins: { legend: { display: false } }
+            scales: {
+              y: { min: 0, max: 5, title: { display: true, text: 'Score (1\u20135)' } }
+            }
           }
         });
       </script>

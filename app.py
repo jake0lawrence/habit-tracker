@@ -223,7 +223,13 @@ def analytics():
     week = get_week_range()
     data = backend.get_range(str(week[0]), str(week[-1]))
     config = load_config()
-    mood_series = calculate_mood_stats(backend.load_all())["series"]
+    all_data = backend.load_all()
+    mood_series = [
+        {"date": d, "score": entry["mood"]}
+        for d, entry in all_data.items()
+        if "mood" in entry
+    ]
+    mood_series.sort(key=lambda x: x["date"])
 
     chart_data = []
     for key, info in config.items():
