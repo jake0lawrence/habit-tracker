@@ -24,9 +24,11 @@
   mood: {{ mood or 3 }},
   moodSaved: false,
   showModal: false,
-  form: { habit: '', label: '', duration: 15, note: '' },
+  form: { habit: '', label: '', duration: 15, note: '', date: '' },
   moodStats: {{ mood_stats | tojson }}
-}" x-init="$watch('dark', val => localStorage.setItem('darkMode', val))" :class="{ 'dark': dark }">
+}"
+  x-init="$watch('dark', val => localStorage.setItem('darkMode', val))"
+  :class="{ 'dark': dark }">
 
   {% if debug %}
   <div class="debug-banner">

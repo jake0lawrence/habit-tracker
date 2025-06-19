@@ -1,5 +1,6 @@
 # habit-track-cli
 [![CI](https://github.com/jake0lawrence/habit-track-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/jake0lawrence/habit-track-cli/actions)
+[![Live on Render](https://img.shields.io/badge/%E2%9C%85%20LIVE%20on%20Render-00c7b7?style=flat-square&logo=render&logoColor=white)](https://habit-track-cli.onrender.com)
 
 Tiny, ADHD‑friendly habit & mood tracker built with [Typer](https://typer.tiangolo.com/) and [Rich](https://rich.readthedocs.io/).
 
