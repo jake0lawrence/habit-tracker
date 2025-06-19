@@ -109,5 +109,25 @@ def export_csv():
         headers={"Content-Disposition": "attachment;filename=habit_week.csv"}
     )
 
+@app.route("/analytics")
+def analytics():
+    week = get_week_range()
+    data = load_data()
+
+    chart_data = []
+    for key, label in HABITS.items():
+        bars = []
+        for day in week:
+            entry = data.get(str(day), {}).get(key)
+            val = entry.get("duration", 0) if isinstance(entry, dict) else 0
+            bars.append(val)
+        chart_data.append({
+            "label": label,
+            "data": bars
+        })
+
+    labels = [d.strftime("%a") for d in week]
+    return render_template("analytics.html", chart_data=chart_data, labels=labels)
+
 if __name__ == "__main__":
     app.run(debug=True)
