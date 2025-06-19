@@ -3,13 +3,23 @@
 <head>
   <meta charset="utf-8">
   <title>⚙️ Settings – habit-track</title>
+  <script src="https://cdn.jsdelivr.net/npm/alpinejs" defer></script>
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+  <script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/static/service-worker.js");
+    }
+  </script>
 </head>
-<body>
+<body x-data="{ dark: false }" :class="{ 'dark': dark }">
   <header>
     <h1>⚙️ Settings</h1>
     <div class="controls">
       <a href="/" class="button">← Back</a>
+      <button @click="dark = !dark" class="theme-toggle">
+        🌗 Toggle {{ dark ? 'Light' : 'Dark' }} Mode
+      </button>
     </div>
   </header>
 
