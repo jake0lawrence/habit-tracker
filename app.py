@@ -5,6 +5,11 @@ from io import StringIO
 
 app = Flask(__name__)
 
+# Application mode: 'prod', 'dev', or 'test'.
+APP_MODE = os.getenv("APP_MODE", "prod")
+app.config["APP_MODE"] = APP_MODE
+app.config["PWA_ENABLED"] = APP_MODE == "prod"
+
 DATA_FILE = Path.home() / ".habit_log.json"
 CONFIG_FILE = Path.home() / ".habit_config.json"
 HABITS = {
@@ -199,6 +204,12 @@ if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(description="Run the Flask web UI")
     parser.add_argument(
+        "--mode",
+        choices=["prod", "dev", "test"],
+        default=app.config.get("APP_MODE", "prod"),
+        help="Execution mode; disables PWA unless 'prod'",
+    )
+    parser.add_argument(
         "--debug",
         action="store_true",
         help="Enable Flask debug mode (overrides $DEBUG)",
@@ -206,5 +217,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     env_debug = os.getenv("DEBUG", "").lower() in {"1", "true", "yes"}
-    debug = args.debug or env_debug
+    debug = args.debug or env_debug or args.mode != "prod"
+
+    app.config["APP_MODE"] = args.mode
+    app.config["PWA_ENABLED"] = args.mode == "prod"
+
     app.run(debug=debug)

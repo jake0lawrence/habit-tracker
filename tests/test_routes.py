@@ -72,3 +72,18 @@ def test_analytics_page(tmp_path):
         assert "chart.min.js" in text or "<canvas" in text
     finally:
         restore(orig_data, orig_config)
+
+
+def test_pwa_toggle(tmp_path):
+    client, orig_data, orig_config = make_client(tmp_path)
+    original = flask_app_module.app.config.get("PWA_ENABLED")
+    try:
+        flask_app_module.app.config["PWA_ENABLED"] = False
+        resp = client.get("/")
+        assert "manifest.json" not in resp.get_data(as_text=True)
+        flask_app_module.app.config["PWA_ENABLED"] = True
+        resp = client.get("/")
+        assert "manifest.json" in resp.get_data(as_text=True)
+    finally:
+        flask_app_module.app.config["PWA_ENABLED"] = original
+        restore(orig_data, orig_config)
