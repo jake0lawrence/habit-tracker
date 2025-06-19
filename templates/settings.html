@@ -18,9 +18,7 @@
     <h1>⚙️ Settings</h1>
     <div class="controls">
       <a href="/" class="button">← Back</a>
-      <button @click="dark = !dark" class="theme-toggle">
-        🌗 Toggle {{ dark ? 'Light' : 'Dark' }} Mode
-      </button>
+      <button @click="dark = !dark" class="theme-toggle" x-text="dark ? '🌗 Light Mode' : '🌑 Dark Mode'"></button>
     </div>
   </header>
 
