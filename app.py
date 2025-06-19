@@ -18,13 +18,16 @@ HABITS = {
 
 def load_data():
     if DATA_FILE.exists():
-        with open(DATA_FILE) as f:
-            return json.load(f)
+        try:
+            with open(DATA_FILE) as f:
+                return json.load(f)
+        except json.JSONDecodeError:
+            return {}
     return {}
 
 def save_data(data):
     with open(DATA_FILE, "w") as f:
-        json.dump(data, f)
+        json.dump(data, f, indent=2)
 
 def get_week_range():
     today = datetime.date.today()
@@ -62,8 +65,11 @@ def calculate_habit_stats(data, week):
 
 def load_config():
     if CONFIG_FILE.exists():
-        with open(CONFIG_FILE) as f:
-            return json.load(f)
+        try:
+            with open(CONFIG_FILE) as f:
+                return json.load(f)
+        except json.JSONDecodeError:
+            return {}
     return {key: {"label": label, "default_duration": 15} for key, label in HABITS.items()}
 
 def save_config(cfg):
