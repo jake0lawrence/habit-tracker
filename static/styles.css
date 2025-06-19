@@ -1,3 +1,4 @@
+/* Base Theme */
 body {
   font-family: system-ui, sans-serif;
   padding: 2em;
@@ -33,8 +34,10 @@ h2 {
 .controls {
   display: flex;
   gap: 0.5em;
+  flex-wrap: wrap;
 }
 
+/* Buttons and Links */
 button, .button {
   padding: 0.4em 0.8em;
   font-size: 1em;
@@ -56,6 +59,14 @@ button.done {
   background: #eee;
 }
 
+a.button {
+  color: #222;
+}
+body.dark a.button {
+  color: #e0e0e0;
+}
+
+/* Weekly Grid Table */
 table {
   width: 100%;
   border-collapse: collapse;
@@ -79,24 +90,14 @@ th, td {
 body.dark table, body.dark th, body.dark td {
   border-color: #555;
 }
-
 body.dark .cell-empty {
   background-color: #333;
 }
-
 body.dark .cell-done {
   background-color: #2e8b57;
 }
 
-a.button {
-  color: #222;
-}
-
-body.dark a.button {
-  color: #e0e0e0;
-}
-
-/* Summary tiles */
+/* Dashboard Tiles */
 .summary-tiles {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
@@ -123,7 +124,12 @@ body.dark .tile {
   font-size: 1.1em;
 }
 
-/* Modal styling */
+/* Mood Block */
+.mood-block {
+  margin-top: 2em;
+}
+
+/* Modal Styles */
 .modal {
   position: fixed;
   top: 0; left: 0;
@@ -155,8 +161,8 @@ body.dark .modal-content {
   font-weight: bold;
 }
 
-.modal-content input[type=\"text\"],
-.modal-content input[type=\"number\"] {
+.modal-content input[type="text"],
+.modal-content input[type="number"] {
   width: 100%;
   padding: 0.5em;
   margin-top: 0.25em;
@@ -171,8 +177,32 @@ body.dark .modal-content {
   gap: 1em;
 }
 
+/* Analytics Chart Blocks */
+.chart-block {
+  margin: 2em 0;
+  padding: 1em;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 0 6px rgba(0,0,0,0.1);
+}
+
+.chart-block h3 {
+  margin-bottom: 1em;
+}
+
+body.dark .chart-block {
+  background: #2c2c2c;
+  color: #eee;
+}
+
+/* Print Styling */
 @media print {
   .controls, .theme-toggle, .modal, .summary-tiles {
     display: none !important;
+  }
+
+  canvas {
+    max-width: 100%;
+    break-inside: avoid;
   }
 }
