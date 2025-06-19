@@ -67,4 +67,12 @@ python habit.py show          # 📊 weekly grid
 
 - [Design Notes](docs/architecture.md)
 
+### Deploy to Render
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?)
+
+Local development stores data in `~/.habit_log.json`. When deployed to Render,
+the app uses an SQLite database persisted on the attached disk or an optional
+Postgres database if `DATABASE_URL` is provided.
+
 

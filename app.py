@@ -3,6 +3,7 @@ import json, os, datetime, csv
 from pathlib import Path
 from io import StringIO
 from config import DevConfig, ProdConfig
+import storage
 
 app = Flask(__name__)
 app.config.from_object(DevConfig)
@@ -123,14 +124,21 @@ def save_config(cfg):
         json.dump(cfg, f, indent=2)
 
 
+def get_storage_backend():
+    """Return the configured storage backend."""
+    return storage.get_backend(json_path=str(DATA_FILE))
+
+
 @app.route("/")
 def index():
     debug_mode = request.args.get("debug") == "true"
     today = datetime.date.today()
     week = get_week_range()
-    data = load_data()
+    backend = get_storage_backend()
+    data = backend.get_range(str(week[0]), str(week[-1]))
+    all_data = backend.load_all()
     mood = data.get(str(today), {}).get("mood")
-    mood_stats = calculate_mood_stats(data)
+    mood_stats = calculate_mood_stats(all_data)
     config = load_config()
     stats = calculate_habit_stats(data, week)
     return render_template(
@@ -148,20 +156,21 @@ def index():
 
 @app.route("/log/<habit>", methods=["POST"])
 def log_habit(habit):
-    data = load_data()
+    backend = get_storage_backend()
     target_date = request.form.get("date", str(datetime.date.today()))
     if request.args.get("delete") == "1":
-        data.get(target_date, {}).pop(habit, None)
-        save_data(data)
+        backend.delete_habit(target_date, habit)
     else:
-        data.setdefault(target_date, {})[habit] = {
-            "duration": int(request.form.get("duration", 1)),
-            "note": request.form.get("note", ""),
-        }
-        save_data(data)
+        backend.save_habit(
+            target_date,
+            habit,
+            int(request.form.get("duration", 1)),
+            request.form.get("note", ""),
+        )
 
-    config = load_config()
     week = get_week_range()
+    data = backend.get_range(str(week[0]), str(week[-1]))
+    config = load_config()
     grid = render_template(
         "_habit_row.html",
         habits=config,
@@ -175,17 +184,17 @@ def log_habit(habit):
 @app.route("/mood", methods=["POST"])
 def log_mood():
     score = int(request.form["score"])
-    data = load_data()
+    backend = get_storage_backend()
     today = str(datetime.date.today())
-    data.setdefault(today, {})["mood"] = score
-    save_data(data)
+    backend.save_mood(today, score)
     return {"status": "ok", "score": score}
 
 
 @app.route("/export")
 def export_csv():
-    data = load_data()
+    backend = get_storage_backend()
     week = get_week_range()
+    data = backend.get_range(str(week[0]), str(week[-1]))
     config = load_config()
 
     output = StringIO()
@@ -210,10 +219,11 @@ def export_csv():
 @app.route("/analytics")
 def analytics():
     debug_mode = request.args.get("debug") == "true"
+    backend = get_storage_backend()
     week = get_week_range()
-    data = load_data()
+    data = backend.get_range(str(week[0]), str(week[-1]))
     config = load_config()
-    mood_series = calculate_mood_stats(data)["series"]
+    mood_series = calculate_mood_stats(backend.load_all())["series"]
 
     chart_data = []
     for key, info in config.items():
