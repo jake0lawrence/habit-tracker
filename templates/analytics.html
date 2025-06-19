@@ -76,6 +76,35 @@
         </script>
       </div>
     {% endfor %}
+
+    <div class="chart-block">
+      <h3>Mood Over Time</h3>
+      <canvas id="mood-chart"></canvas>
+      <script>
+        const moodSeries = {{ mood_series | tojson }};
+        const ctx = document.getElementById('mood-chart').getContext('2d');
+        const lineColor = document.body.classList.contains('dark') ? '#ffffff' : '#222222';
+        new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: moodSeries.map(p => p.date),
+            datasets: [{
+              label: 'Mood',
+              data: moodSeries.map(p => p.score),
+              tension: 0.3,
+              fill: false,
+              borderColor: lineColor,
+              backgroundColor: lineColor
+            }]
+          },
+          options: {
+            responsive: true,
+            scales: { y: { beginAtZero: true, max: 5 } },
+            plugins: { legend: { display: false } }
+          }
+        });
+      </script>
+    </div>
   </section>
 </body>
 </html>

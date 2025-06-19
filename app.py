@@ -71,6 +71,40 @@ def calculate_habit_stats(data, week):
     return stats
 
 
+def calculate_mood_stats(data):
+    """Return mood statistics and time series from saved data."""
+    today = datetime.date.today()
+    entries = []
+    for date_str, info in data.items():
+        mood = info.get("mood")
+        if isinstance(mood, int):
+            try:
+                date = datetime.date.fromisoformat(date_str)
+            except ValueError:
+                continue
+            entries.append((date, mood))
+    entries.sort(key=lambda x: x[0])
+
+    scores = [score for _, score in entries]
+
+    def avg(seq):
+        return round(sum(seq) / len(seq), 1) if seq else 0
+
+    week_start = today - datetime.timedelta(days=6)
+    month_start = today - datetime.timedelta(days=29)
+    weekly_scores = [s for d, s in entries if d >= week_start]
+    month_scores = [s for d, s in entries if d >= month_start]
+
+    series = [{"date": d.isoformat(), "score": s} for d, s in entries]
+
+    return {
+        "weekly_avg": avg(weekly_scores),
+        "30d_avg": avg(month_scores),
+        "overall_avg": avg(scores),
+        "series": series,
+    }
+
+
 def load_config():
     if CONFIG_FILE.exists():
         try:
@@ -96,6 +130,7 @@ def index():
     week = get_week_range()
     data = load_data()
     mood = data.get(str(today), {}).get("mood")
+    mood_stats = calculate_mood_stats(data)
     config = load_config()
     stats = calculate_habit_stats(data, week)
     return render_template(
@@ -104,6 +139,7 @@ def index():
         data=data,
         today=str(today),
         mood=mood,
+        mood_stats=mood_stats,
         week=week,
         stats=stats,
         debug=debug_mode,
@@ -177,6 +213,7 @@ def analytics():
     week = get_week_range()
     data = load_data()
     config = load_config()
+    mood_series = calculate_mood_stats(data)["series"]
 
     chart_data = []
     for key, info in config.items():
@@ -188,7 +225,13 @@ def analytics():
         chart_data.append({"label": info["label"], "data": bars})
 
     labels = [d.strftime("%a") for d in week]
-    return render_template("analytics.html", chart_data=chart_data, labels=labels, debug=debug_mode)
+    return render_template(
+        "analytics.html",
+        chart_data=chart_data,
+        labels=labels,
+        mood_series=mood_series,
+        debug=debug_mode,
+    )
 
 
 @app.route("/settings", methods=["GET", "POST"])

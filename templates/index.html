@@ -24,7 +24,8 @@
   mood: {{ mood or 3 }},
   moodSaved: false,
   showModal: false,
-  form: { habit: '', label: '', duration: 15, note: '' }
+  form: { habit: '', label: '', duration: 15, note: '' },
+  moodStats: {{ mood_stats | tojson }}
 }" x-init="$watch('dark', val => localStorage.setItem('darkMode', val))" :class="{ 'dark': dark }">
 
   {% if debug %}
@@ -77,6 +78,13 @@
       <output x-text="mood" style="margin-left: 0.5em;"></output>
       <span x-show="moodSaved" class="save-indicator" x-transition>✅</span>
     </form>
+
+    <div class="mood-summary tile">
+      <h3>📋 Mood Summary</h3>
+      <p>7-day Avg: <strong x-text="moodStats.weekly_avg.toFixed(1)"></strong></p>
+      <p>30-day Avg: <strong x-text="moodStats['30d_avg'].toFixed(1)"></strong></p>
+      <p>Overall Avg: <strong x-text="moodStats.overall_avg.toFixed(1)"></strong></p>
+    </div>
   </section>
 
   <!-- Modal -->
