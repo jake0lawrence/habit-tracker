@@ -66,6 +66,15 @@ def calculate_habit_stats(data, week):
 
 def load_config():
     if CONFIG_FILE.exists():
+        try:
+            with open(CONFIG_FILE) as f:
+                return json.load(f)
+        except json.JSONDecodeError:
+            return {}
+    return {
+        key: {"label": label, "default_duration": 15}
+        for key, label in HABITS.items()
+    }
 
 def save_config(cfg):
     with open(CONFIG_FILE, "w") as f:
