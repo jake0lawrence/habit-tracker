@@ -8,8 +8,8 @@ const urlsToCache = [
   "/static/manifest.json",
   "/static/icons/icon-192.png",
   "/static/icons/icon-512.png",
-  "https://unpkg.com/htmx.org@1.9.2",
-  "https://cdn.jsdelivr.net/npm/alpinejs",
+  "/static/htmx.min.js",
+  "/static/alpine.min.js",
   "https://cdn.jsdelivr.net/npm/chart.js"
 ];
 
