@@ -179,4 +179,15 @@ def settings():
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    import argparse
+    parser = argparse.ArgumentParser(description="Run the Flask web UI")
+    parser.add_argument(
+        "--debug",
+        action="store_true",
+        help="Enable Flask debug mode (overrides $DEBUG)",
+    )
+    args = parser.parse_args()
+
+    env_debug = os.getenv("DEBUG", "").lower() in {"1", "true", "yes"}
+    debug = args.debug or env_debug
+    app.run(debug=debug)
