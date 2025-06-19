@@ -2,8 +2,10 @@ from flask import Flask, render_template, request
 import json, os, datetime, csv
 from pathlib import Path
 from io import StringIO
+from config import DevConfig, ProdConfig
 
 app = Flask(__name__)
+app.config.from_object(DevConfig)
 
 # Application mode: 'prod', 'dev', or 'test'.
 APP_MODE = os.getenv("APP_MODE", "prod")
@@ -81,6 +83,7 @@ def load_config():
         for key, label in HABITS.items()
     }
 
+
 def save_config(cfg):
     with open(CONFIG_FILE, "w") as f:
         json.dump(cfg, f, indent=2)
@@ -88,6 +91,7 @@ def save_config(cfg):
 
 @app.route("/")
 def index():
+    debug_mode = request.args.get("debug") == "true"
     today = datetime.date.today()
     week = get_week_range()
     data = load_data()
@@ -102,6 +106,7 @@ def index():
         mood=mood,
         week=week,
         stats=stats,
+        debug=debug_mode,
     )
 
 
@@ -114,7 +119,6 @@ def log_habit(habit):
         "note": request.form.get("note", ""),
     }
     save_data(data)
-    # Return updated grid HTML so HTMX can swap it in
     config = load_config()
     week = get_week_range()
     grid = render_template(
@@ -124,7 +128,7 @@ def log_habit(habit):
         week=week,
         today=today,
     )
-    html = f"<div id=\"habit-grid\">{grid}</div>"
+    html = f'<div id="habit-grid">{grid}</div>'
     return html
 
 
@@ -165,6 +169,7 @@ def export_csv():
 
 @app.route("/analytics")
 def analytics():
+    debug_mode = request.args.get("debug") == "true"
     week = get_week_range()
     data = load_data()
     config = load_config()
@@ -179,7 +184,7 @@ def analytics():
         chart_data.append({"label": info["label"], "data": bars})
 
     labels = [d.strftime("%a") for d in week]
-    return render_template("analytics.html", chart_data=chart_data, labels=labels)
+    return render_template("analytics.html", chart_data=chart_data, labels=labels, debug=debug_mode)
 
 
 @app.route("/settings", methods=["GET", "POST"])
@@ -193,6 +198,7 @@ def settings():
             config[key]["default_duration"] = int(
                 request.form.get(f"duration_{key}", config[key]["default_duration"])
             )
+        app.config["PWA_ENABLED"] = request.form.get("pwa_enabled") == "on"
         save_config(config)
         return render_template(
             "settings.html", config=config, message="✅ Settings saved."
@@ -206,18 +212,21 @@ if __name__ == "__main__":
     parser.add_argument(
         "--mode",
         choices=["prod", "dev", "test"],
-        default=app.config.get("APP_MODE", "prod"),
-        help="Execution mode; disables PWA unless 'prod'",
+        default=os.environ.get("APP_MODE", "prod"),
+        help="Execution mode; disables PWA unless 'prod'"
     )
     parser.add_argument(
         "--debug",
         action="store_true",
-        help="Enable Flask debug mode (overrides $DEBUG)",
+        help="Enable Flask debug mode (overrides $DEBUG)"
     )
     args = parser.parse_args()
 
+    if args.mode == "prod":
+        app.config.from_object(ProdConfig)
+
     env_debug = os.getenv("DEBUG", "").lower() in {"1", "true", "yes"}
-    debug = args.debug or env_debug or args.mode != "prod"
+    debug = args.debug or env_debug or app.config.get("DEBUG", False)
 
     app.config["APP_MODE"] = args.mode
     app.config["PWA_ENABLED"] = args.mode == "prod"

@@ -7,6 +7,14 @@ body {
   transition: background 0.3s, color 0.3s;
 }
 
+.debug-banner {
+  background: #ff9800;
+  color: #000;
+  padding: 0.5em;
+  text-align: center;
+  font-weight: bold;
+}
+
 body.dark {
   background: #1e1e1e;
   color: #e0e0e0;

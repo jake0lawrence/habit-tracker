@@ -6,14 +6,19 @@
   <script src="{{ url_for('static', filename='htmx.min.js') }}"></script>
   <script src="{{ url_for('static', filename='alpine.min.js') }}" defer></script>
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-  {% if config.PWA_ENABLED %}
+
+  {% if config.PWA_ENABLED and 'github.dev' not in request.host %}
     <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
     <script>
-      navigator.serviceWorker.register("/static/service-worker.js");
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("/static/service-worker.js");
+      }
     </script>
   {% endif %}
+
   <link rel="icon" type="image/svg+xml" href="/static/icons/icon.svg">
 </head>
+
 <body x-data="{
   dark: JSON.parse(localStorage.getItem('darkMode') || 'false'),
   mood: {{ mood or 3 }},
@@ -21,6 +26,12 @@
   showModal: false,
   form: { habit: '', label: '', duration: 15, note: '' }
 }" x-init="$watch('dark', val => localStorage.setItem('darkMode', val))" :class="{ 'dark': dark }">
+
+  {% if debug %}
+  <div class="debug-banner">
+    DEBUG MODE ON | Dark: <span x-text="dark"></span> | PWA: {{ config.PWA_ENABLED }}
+  </div>
+  {% endif %}
 
   <header>
     <h1>🌿 habit-track (Web UI)</h1>
@@ -55,8 +66,13 @@
   <!-- Mood Tracker -->
   <section class="mood-block">
     <h2>🧠 Mood Score</h2>
-    <form hx-post="/mood" hx-trigger="change" hx-target="this" hx-swap="none"
-          hx-on="htmx:afterRequest: moodSaved = true; setTimeout(() => moodSaved = false, 1000)">
+    <form
+      hx-post="/mood"
+      hx-trigger="change"
+      hx-target="this"
+      hx-swap="none"
+      hx-on="htmx:afterRequest: moodSaved = true; setTimeout(() => moodSaved = false, 1000)"
+    >
       <input type="range" name="score" min="1" max="5" x-model="mood">
       <output x-text="mood" style="margin-left: 0.5em;"></output>
       <span x-show="moodSaved" class="save-indicator" x-transition>✅</span>

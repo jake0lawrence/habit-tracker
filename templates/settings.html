@@ -5,15 +5,22 @@
   <title>⚙️ Settings – habit-track</title>
   <script src="{{ url_for('static', filename='alpine.min.js') }}" defer></script>
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-  {% if config.PWA_ENABLED %}
+
+  {% if config.PWA_ENABLED and 'github.dev' not in request.host %}
     <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
     <script>
-      navigator.serviceWorker.register("/static/service-worker.js");
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("/static/service-worker.js");
+      }
     </script>
   {% endif %}
+
   <link rel="icon" type="image/svg+xml" href="/static/icons/icon.svg">
 </head>
-<body x-data="{ dark: JSON.parse(localStorage.getItem('darkMode') || 'false') }" x-init="$watch('dark', val => localStorage.setItem('darkMode', val))" :class="{ 'dark': dark }">
+<body x-data="{ dark: JSON.parse(localStorage.getItem('darkMode') || 'false') }"
+      x-init="$watch('dark', val => localStorage.setItem('darkMode', val))"
+      :class="{ 'dark': dark }">
+
   <header>
     <h1>⚙️ Settings</h1>
     <div class="controls">
@@ -49,6 +56,14 @@
         {% endfor %}
       </tbody>
     </table>
+
+    <p>
+      <label>
+        <input type="checkbox" name="pwa_enabled" {% if config.PWA_ENABLED %}checked{% endif %}>
+        Enable PWA features
+      </label>
+    </p>
+
     <button type="submit" class="button">💾 Save Settings</button>
   </form>
 </body>

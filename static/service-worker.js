@@ -2,14 +2,12 @@ const CACHE_NAME = "habit-track-cache-v1";
 const urlsToCache = [
   "/",
   "/analytics",
-  "/settings",
   "/static/styles.css",
-  "/static/manifest.json",
-  "/static/icons/icon-192.png",
-  "/static/icons/icon-512.png",
-  "/static/htmx.min.js",
+  "/static/chart.min.js",
   "/static/alpine.min.js",
-  "/static/chart.min.js"
+  "/static/htmx.min.js",
+  "/static/icons/icon-192.png",
+  "/static/icons/icon-512.png"
 ];
 
 self.addEventListener("install", event => {
