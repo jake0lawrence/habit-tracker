@@ -288,4 +288,5 @@ if __name__ == "__main__":
     app.config["APP_MODE"] = args.mode
     app.config["PWA_ENABLED"] = args.mode == "prod"
 
-    app.run(debug=debug)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=debug)
