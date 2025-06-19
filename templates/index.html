@@ -3,24 +3,25 @@
 <head>
   <meta charset="utf-8">
   <title>habit-track</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
   <script src="https://unpkg.com/htmx.org@1.9.2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/alpinejs" defer></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
-  <h1>🌱 habit-track-cli (web)</h1>
+  <h1>🌿 habit-track (Web UI)</h1>
 
   <section>
-    <h2>Today: {{ today }}</h2>
-    <div id="habits" hx-swap="outerHTML" hx-target="#habits">
+    <h2>🗓️ Weekly Habit Grid</h2>
+    <div id="habit-grid">
       {% include "_habit_row.html" %}
     </div>
   </section>
 
-  <section>
+  <section x-data="{ mood: {{ mood or 3 }} }">
     <h2>🧠 Mood Score</h2>
     <form hx-post="/mood" hx-trigger="change" hx-target="this" hx-swap="none">
-      <input type="range" name="score" min="1" max="5" value="{{ mood or 3 }}">
-      <output>{{ mood or '––' }}</output>
+      <input type="range" name="score" min="1" max="5" x-model="mood">
+      <output x-text="mood" style="margin-left: 0.5em;"></output>
     </form>
   </section>
 </body>
