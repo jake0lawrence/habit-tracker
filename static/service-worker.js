@@ -10,7 +10,7 @@ const urlsToCache = [
   "/static/icons/icon-512.png",
   "/static/htmx.min.js",
   "/static/alpine.min.js",
-  "https://cdn.jsdelivr.net/npm/chart.js"
+  "/static/chart.min.js"
 ];
 
 self.addEventListener("install", event => {
