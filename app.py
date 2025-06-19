@@ -33,7 +33,9 @@ def get_week_range():
 
 def calculate_habit_stats(data, week):
     stats = {}
-    for key, label in HABITS.items():
+    config = load_config()
+    for key, info in config.items():
+        label = info["label"]
         streak = 0
         total_duration = 0
         count = 0
@@ -74,8 +76,9 @@ def index():
     week = get_week_range()
     data = load_data()
     mood = data.get(str(today), {}).get("mood")
+    config = load_config()
     stats = calculate_habit_stats(data, week)
-    return render_template("index.html", habits=HABITS, data=data, today=str(today), mood=mood, week=week, stats=stats)
+    return render_template("index.html", habits=config, data=data, today=str(today), mood=mood, week=week, stats=stats)
 
 @app.route("/log/<habit>", methods=["POST"])
 def log_habit(habit):
@@ -101,13 +104,14 @@ def log_mood():
 def export_csv():
     data = load_data()
     week = get_week_range()
+    config = load_config()
 
     output = StringIO()
     writer = csv.writer(output)
     writer.writerow(["Habit"] + [d.strftime("%Y-%m-%d") for d in week])
 
-    for key, label in HABITS.items():
-        row = [label]
+    for key, info in config.items():
+        row = [info["label"]]
         for day in week:
             val = data.get(str(day), {}).get(key)
             row.append("✓" if val else "")
@@ -124,16 +128,17 @@ def export_csv():
 def analytics():
     week = get_week_range()
     data = load_data()
+    config = load_config()
 
     chart_data = []
-    for key, label in HABITS.items():
+    for key, info in config.items():
         bars = []
         for day in week:
             entry = data.get(str(day), {}).get(key)
             val = entry.get("duration", 0) if isinstance(entry, dict) else 0
             bars.append(val)
         chart_data.append({
-            "label": label,
+            "label": info["label"],
             "data": bars
         })
 
