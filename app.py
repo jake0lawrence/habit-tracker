@@ -109,7 +109,18 @@ def log_habit(habit):
         "note": request.form.get("note", ""),
     }
     save_data(data)
-    return ("", 204)
+    # Return updated grid HTML so HTMX can swap it in
+    config = load_config()
+    week = get_week_range()
+    grid = render_template(
+        "_habit_row.html",
+        habits=config,
+        data=data,
+        week=week,
+        today=today,
+    )
+    html = f"<div id=\"habit-grid\">{grid}</div>"
+    return html
 
 
 @app.route("/mood", methods=["POST"])
@@ -119,7 +130,7 @@ def log_mood():
     today = str(datetime.date.today())
     data.setdefault(today, {})["mood"] = score
     save_data(data)
-    return ("", 204)
+    return {"status": "ok", "score": score}
 
 
 @app.route("/export")

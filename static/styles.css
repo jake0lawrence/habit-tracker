@@ -58,6 +58,11 @@ button.done {
 .theme-toggle {
   background: #eee;
 }
+body.dark .theme-toggle {
+  background: #444;
+  color: #e0e0e0;
+  border-color: #666;
+}
 
 a.button {
   color: #222;
@@ -127,6 +132,9 @@ body.dark .tile {
 /* Mood Block */
 .mood-block {
   margin-top: 2em;
+}
+.save-indicator {
+  margin-left: 0.5em;
 }
 
 /* Modal Styles */
