@@ -13,17 +13,29 @@
         <td>{{ label }}</td>
         {% for day in week %}
           {% set entry = data.get(day|string, {}).get(key) %}
+          {% set tip = '' %}
+          {% if entry is mapping %}
+            {% set tip = 'Duration: ' ~ entry.get('duration', '') ~ ' min' %}
+            {% if entry.get('note') %}{% set tip = tip ~ ' | Note: ' ~ entry['note'] %}{% endif %}
+          {% endif %}
           <td class="{{ 'cell-done' if entry else 'cell-empty' }}">
             {% if day == today|date %}
-              <form hx-post="/log/{{ key }}" hx-target="#habit-grid" hx-swap="outerHTML">
-                <input type="hidden" name="duration" value="15">
-                <input type="hidden" name="note" value="auto">
-                <button class="{{ 'done' if entry else '' }}">
-                  {{ '✓' if entry else 'Log' }}
-                </button>
-              </form>
+              <button
+                @click.prevent="
+                  showModal = true;
+                  form.habit = '{{ key }}';
+                  form.label = '{{ label }}';
+                  form.duration = entry?.duration || 15;
+                  form.note = entry?.note || '';
+                "
+                :title="'Click to log or edit entry'"
+                class="{{ 'done' if entry else '' }}"
+                title="{{ tip }}"
+              >
+                {{ '✓' if entry else 'Log' }}
+              </button>
             {% else %}
-              {{ '✓' if entry else '–' }}
+              <span title="{{ tip }}">{{ '✓' if entry else '–' }}</span>
             {% endif %}
           </td>
         {% endfor %}
