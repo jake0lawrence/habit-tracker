@@ -1,35 +1,51 @@
 body {
   font-family: system-ui, sans-serif;
-  margin: 2em;
-  background: #fdfdfc;
+  padding: 2em;
+  background: #f8f9fa;
   color: #222;
 }
 
 h1 {
-  font-size: 1.8em;
-  margin-bottom: 0.5em;
+  font-size: 1.7em;
+  margin-bottom: 1em;
+}
+
+h2 {
+  margin-top: 2em;
+  font-size: 1.3em;
+  color: #444;
 }
 
 table {
+  width: 100%;
   border-collapse: collapse;
   margin-top: 1em;
 }
 
 th, td {
-  padding: 0.5em 1em;
+  padding: 0.5em;
   text-align: center;
+  border: 1px solid #ccc;
+}
+
+.cell-done {
+  background-color: #d0f0d0;
+}
+
+.cell-empty {
+  background-color: #f4f4f4;
 }
 
 button {
-  padding: 0.4em 0.8em;
-  font-size: 1em;
-  cursor: pointer;
-  border: 1px solid #ccc;
+  padding: 0.3em 0.7em;
+  border: 1px solid #aaa;
   background: white;
+  cursor: pointer;
   border-radius: 4px;
 }
 
 button.done {
   background: #a2e6a2;
   border-color: #5db65d;
+  font-weight: bold;
 }
