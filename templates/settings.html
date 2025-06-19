@@ -6,6 +6,7 @@
   <script src="https://cdn.jsdelivr.net/npm/alpinejs" defer></script>
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
   <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+  <link rel="icon" type="image/svg+xml" href="/static/icons/icon.svg">
   <script>
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("/static/service-worker.js");
@@ -40,8 +41,12 @@
         {% for key, info in config.items() %}
         <tr>
           <td><code>{{ key }}</code></td>
-          <td><input type="text" name="label_{{ key }}" value="{{ info.label }}"></td>
-          <td><input type="number" name="duration_{{ key }}" value="{{ info.default_duration }}" min="1"></td>
+          <td>
+            <input type="text" name="label_{{ key }}" value="{{ info.label }}">
+          </td>
+          <td>
+            <input type="number" name="duration_{{ key }}" value="{{ info.default_duration }}" min="1">
+          </td>
         </tr>
         {% endfor %}
       </tbody>
