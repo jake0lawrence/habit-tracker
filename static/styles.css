@@ -177,6 +177,9 @@ body.dark .tile {
 .mood-block {
   margin-top: 2em;
 }
+.mood-summary {
+  margin-top: 1em;
+}
 .save-indicator {
   margin-left: 0.5em;
   transition: opacity 0.3s ease;

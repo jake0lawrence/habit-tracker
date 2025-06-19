@@ -1,6 +1,7 @@
 import json
 import datetime
 from pathlib import Path
+import pytest
 
 import app as flask_app_module
 
@@ -98,6 +99,42 @@ def test_analytics_page(tmp_path):
         assert resp.status_code == 200
         text = resp.get_data(as_text=True)
         assert "chart.min.js" in text or "<canvas" in text
+    finally:
+        restore(orig_data, orig_config)
+
+
+def test_mood_average(tmp_path):
+    client, orig_data, orig_config = make_client(tmp_path)
+    try:
+        # seed mood data
+        today = datetime.date.today()
+        data = {
+            str(today): {"mood": 4},
+            str(today - datetime.timedelta(days=1)): {"mood": 3},
+        }
+        (flask_app_module.DATA_FILE).write_text(json.dumps(data))
+        stats = flask_app_module.calculate_mood_stats(data)
+        assert stats["overall_avg"] == pytest.approx(3.5)
+    finally:
+        restore(orig_data, orig_config)
+
+
+def test_homepage_mood_summary(tmp_path):
+    client, orig_data, orig_config = make_client(tmp_path)
+    try:
+        res = client.get("/")
+        assert res.status_code == 200
+        assert b"Mood Summary" in res.data
+    finally:
+        restore(orig_data, orig_config)
+
+
+def test_analytics_mood_route(tmp_path):
+    client, orig_data, orig_config = make_client(tmp_path)
+    try:
+        res = client.get("/analytics")
+        assert res.status_code == 200
+        assert b"id=\"mood-chart\"" in res.data
     finally:
         restore(orig_data, orig_config)
 
