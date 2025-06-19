@@ -1,5 +1,5 @@
 <!doctype html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <title>habit-track</title>
@@ -7,8 +7,17 @@
   <script src="https://cdn.jsdelivr.net/npm/alpinejs" defer></script>
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
-<body>
-  <h1>🌿 habit-track (Web UI)</h1>
+<body x-data="{ dark: false, mood: {{ mood or 3 }} }" :class="{ 'dark': dark }">
+  <header>
+    <h1>🌿 habit-track (Web UI)</h1>
+    <div class="controls">
+      <button @click="dark = !dark" class="theme-toggle">
+        🌗 Toggle {{ dark ? 'Light' : 'Dark' }} Mode
+      </button>
+      <a href="/export" class="button">📥 Export as CSV</a>
+      <button onclick="window.print()" class="button">🖨️ Print View</button>
+    </div>
+  </header>
 
   <section>
     <h2>🗓️ Weekly Habit Grid</h2>
@@ -17,7 +26,7 @@
     </div>
   </section>
 
-  <section x-data="{ mood: {{ mood or 3 }} }">
+  <section class="mood-block">
     <h2>🧠 Mood Score</h2>
     <form hx-post="/mood" hx-trigger="change" hx-target="this" hx-swap="none">
       <input type="range" name="score" min="1" max="5" x-model="mood">
