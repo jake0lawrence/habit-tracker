@@ -6,6 +6,7 @@ from io import StringIO
 app = Flask(__name__)
 
 DATA_FILE = Path.home() / ".habit_log.json"
+CONFIG_FILE = Path.home() / ".habit_config.json"
 HABITS = {
     "med": "Meditation",
     "grat": "Gratitude",
@@ -38,7 +39,7 @@ def calculate_habit_stats(data, week):
         count = 0
         streak_broken = False
 
-        for day in reversed(week):  # start from today, move backwards
+        for day in reversed(week):
             entry = data.get(str(day), {}).get(key)
             if isinstance(entry, dict) and entry.get("duration"):
                 duration = entry["duration"]
@@ -56,6 +57,16 @@ def calculate_habit_stats(data, week):
             "avg_duration": avg
         }
     return stats
+
+def load_config():
+    if CONFIG_FILE.exists():
+        with open(CONFIG_FILE) as f:
+            return json.load(f)
+    return {key: {"label": label, "default_duration": 15} for key, label in HABITS.items()}
+
+def save_config(cfg):
+    with open(CONFIG_FILE, "w") as f:
+        json.dump(cfg, f, indent=2)
 
 @app.route("/")
 def index():
@@ -128,6 +139,17 @@ def analytics():
 
     labels = [d.strftime("%a") for d in week]
     return render_template("analytics.html", chart_data=chart_data, labels=labels)
+
+@app.route("/settings", methods=["GET", "POST"])
+def settings():
+    config = load_config()
+    if request.method == "POST":
+        for key in HABITS.keys():
+            config[key]["label"] = request.form.get(f"label_{key}", config[key]["label"])
+            config[key]["default_duration"] = int(request.form.get(f"duration_{key}", config[key]["default_duration"]))
+        save_config(config)
+        return render_template("settings.html", config=config, message="✅ Settings saved.")
+    return render_template("settings.html", config=config, message=None)
 
 if __name__ == "__main__":
     app.run(debug=True)
