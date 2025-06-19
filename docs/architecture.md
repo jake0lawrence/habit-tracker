@@ -80,6 +80,7 @@ This is a lightweight, ADHD-friendly habit and mood tracker designed to be fast,
 * [ ] PyPI packaging and `pipx` support
 * [ ] One-file Windows/Mac installer (PyInstaller)
 * [ ] Final polish + demo GIF
+For a detailed list of ongoing tasks, see [tasks.md](tasks.md).
 
 ---
 
