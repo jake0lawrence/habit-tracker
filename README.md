@@ -36,6 +36,9 @@ pip install -r requirements.txt
 
 # Run the app
 python habit.py show
+
+# Run the web UI (add --debug or set DEBUG=1 to enable Flask debugging)
+python app.py [--debug]
 ```
 ## Usage
 
