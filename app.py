@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request
-import json, os, datetime
+import json, os, datetime, csv
 from pathlib import Path
+from io import StringIO
 
 app = Flask(__name__)
 
@@ -41,7 +42,10 @@ def index():
 def log_habit(habit):
     data = load_data()
     today = str(datetime.date.today())
-    data.setdefault(today, {})[habit] = 1
+    data.setdefault(today, {})[habit] = {
+        "duration": int(request.form.get("duration", 1)),
+        "note": request.form.get("note", "")
+    }
     save_data(data)
     return ("", 204)
 
@@ -53,6 +57,29 @@ def log_mood():
     data.setdefault(today, {})["mood"] = score
     save_data(data)
     return ("", 204)
+
+@app.route("/export")
+def export_csv():
+    data = load_data()
+    week = get_week_range()
+
+    output = StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["Habit"] + [d.strftime("%Y-%m-%d") for d in week])
+
+    for key, label in HABITS.items():
+        row = [label]
+        for day in week:
+            val = data.get(str(day), {}).get(key)
+            row.append("✓" if val else "")
+        writer.writerow(row)
+
+    output.seek(0)
+    return app.response_class(
+        output.getvalue(),
+        mimetype='text/csv',
+        headers={"Content-Disposition": "attachment;filename=habit_week.csv"}
+    )
 
 if __name__ == "__main__":
     app.run(debug=True)
