@@ -1,0 +1,17 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>🧠 AI Journal – habit-track</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+  <header><h1>🧠 Mood Journal</h1></header>
+  <pre style="white-space: pre-wrap;">{{ prompt }}</pre>
+
+  <form method="POST" action="/journal-entry">
+    <textarea name="entry" rows="10" style="width: 100%;" placeholder="Write your thoughts..."></textarea>
+    <button type="submit" class="button">💾 Save Entry</button>
+  </form>
+</body>
+</html>
