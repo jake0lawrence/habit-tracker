@@ -1,0 +1,55 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Analytics – habit-track</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/alpinejs" defer></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body x-data="{ dark: false }" :class="{ 'dark': dark }">
+  <header>
+    <h1>📈 Analytics – habit-track</h1>
+    <div class="controls">
+      <a href="/" class="button">← Back</a>
+      <button @click="dark = !dark" class="theme-toggle">
+        🌗 Toggle {{ dark ? 'Light' : 'Dark' }} Mode
+      </button>
+    </div>
+  </header>
+
+  <section>
+    {% for chart in chart_data %}
+      <div class="chart-block">
+        <h3>{{ chart.label }}</h3>
+        <canvas id="chart-{{ loop.index }}"></canvas>
+        <script>
+          new Chart(document.getElementById("chart-{{ loop.index }}"), {
+            type: 'bar',
+            data: {
+              labels: {{ labels|tojson }},
+              datasets: [{
+                label: '{{ chart.label }}',
+                data: {{ chart.data|tojson }},
+                backgroundColor: '#42b983'
+              }]
+            },
+            options: {
+              responsive: true,
+              plugins: {
+                legend: { display: false }
+              },
+              scales: {
+                y: {
+                  beginAtZero: true,
+                  ticks: { stepSize: 5 }
+                }
+              }
+            }
+          });
+        </script>
+      </div>
+    {% endfor %}
+  </section>
+</body>
+</html>
