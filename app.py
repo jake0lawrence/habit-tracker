@@ -30,13 +30,41 @@ def get_week_range():
     start = today - datetime.timedelta(days=today.weekday())
     return [start + datetime.timedelta(days=i) for i in range(7)]
 
+def calculate_habit_stats(data, week):
+    stats = {}
+    for key, label in HABITS.items():
+        streak = 0
+        total_duration = 0
+        count = 0
+        streak_broken = False
+
+        for day in reversed(week):  # start from today, move backwards
+            entry = data.get(str(day), {}).get(key)
+            if isinstance(entry, dict) and entry.get("duration"):
+                duration = entry["duration"]
+                total_duration += duration
+                count += 1
+                if not streak_broken:
+                    streak += 1
+            else:
+                streak_broken = True
+
+        avg = round(total_duration / count, 1) if count else 0
+        stats[key] = {
+            "label": label,
+            "streak": streak,
+            "avg_duration": avg
+        }
+    return stats
+
 @app.route("/")
 def index():
     today = datetime.date.today()
     week = get_week_range()
     data = load_data()
     mood = data.get(str(today), {}).get("mood")
-    return render_template("index.html", habits=HABITS, data=data, today=str(today), mood=mood, week=week)
+    stats = calculate_habit_stats(data, week)
+    return render_template("index.html", habits=HABITS, data=data, today=str(today), mood=mood, week=week, stats=stats)
 
 @app.route("/log/<habit>", methods=["POST"])
 def log_habit(habit):
