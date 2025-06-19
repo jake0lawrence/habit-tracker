@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request
 import json, os, datetime
 from pathlib import Path
 
@@ -14,7 +14,6 @@ HABITS = {
     "read": "Read"
 }
 
-# Load/save functions
 def load_data():
     if DATA_FILE.exists():
         with open(DATA_FILE) as f:
@@ -25,13 +24,18 @@ def save_data(data):
     with open(DATA_FILE, "w") as f:
         json.dump(data, f)
 
-# Routes
+def get_week_range():
+    today = datetime.date.today()
+    start = today - datetime.timedelta(days=today.weekday())
+    return [start + datetime.timedelta(days=i) for i in range(7)]
+
 @app.route("/")
 def index():
-    today = str(datetime.date.today())
+    today = datetime.date.today()
+    week = get_week_range()
     data = load_data()
-    mood = data.get(today, {}).get("mood")
-    return render_template("index.html", habits=HABITS, data=data, today=today, mood=mood)
+    mood = data.get(str(today), {}).get("mood")
+    return render_template("index.html", habits=HABITS, data=data, today=str(today), mood=mood, week=week)
 
 @app.route("/log/<habit>", methods=["POST"])
 def log_habit(habit):
@@ -39,7 +43,7 @@ def log_habit(habit):
     today = str(datetime.date.today())
     data.setdefault(today, {})[habit] = 1
     save_data(data)
-    return render_template("_habit_row.html", habits=HABITS, data=data, today=today)
+    return ("", 204)
 
 @app.route("/mood", methods=["POST"])
 def log_mood():
