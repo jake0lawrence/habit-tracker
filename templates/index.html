@@ -15,11 +15,11 @@
   </script>
 </head>
 <body x-data="{
-  dark: false,
+  dark: JSON.parse(localStorage.getItem('darkMode') || 'false'),
   mood: {{ mood or 3 }},
   showModal: false,
   form: { habit: '', label: '', duration: 15, note: '' }
-}" :class="{ 'dark': dark }">
+}" x-init="$watch('dark', val => localStorage.setItem('darkMode', val))" :class="{ 'dark': dark }">
 
   <header>
     <h1>🌿 habit-track (Web UI)</h1>
