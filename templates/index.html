@@ -88,6 +88,7 @@
         localStorage.setItem(`${form.habit}_note`, form.note);
         showModal = false
       ">
+        <input type="hidden" name="date" :value="form.date">
         <label>Duration (minutes):</label>
         <input type="number" name="duration" x-model="form.duration" min="1" required>
         <label>Note:</label>

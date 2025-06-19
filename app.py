@@ -113,12 +113,17 @@ def index():
 @app.route("/log/<habit>", methods=["POST"])
 def log_habit(habit):
     data = load_data()
-    today = str(datetime.date.today())
-    data.setdefault(today, {})[habit] = {
-        "duration": int(request.form.get("duration", 1)),
-        "note": request.form.get("note", ""),
-    }
-    save_data(data)
+    target_date = request.form.get("date", str(datetime.date.today()))
+    if request.args.get("delete") == "1":
+        data.get(target_date, {}).pop(habit, None)
+        save_data(data)
+    else:
+        data.setdefault(target_date, {})[habit] = {
+            "duration": int(request.form.get("duration", 1)),
+            "note": request.form.get("note", ""),
+        }
+        save_data(data)
+
     config = load_config()
     week = get_week_range()
     grid = render_template(
@@ -126,10 +131,9 @@ def log_habit(habit):
         habits=config,
         data=data,
         week=week,
-        today=today,
+        today=str(datetime.date.today()),
     )
-    html = f'<div id="habit-grid">{grid}</div>'
-    return html
+    return f'<div id="habit-grid">{grid}</div>'
 
 
 @app.route("/mood", methods=["POST"])
