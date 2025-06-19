@@ -16,12 +16,10 @@
 </head>
 <body x-data="{ dark: false }" :class="{ 'dark': dark }">
   <header>
-    <h1>📈 Analytics – habit-track</h1>
+    <h1>📈 Analytics</h1>
     <div class="controls">
       <a href="/" class="button">← Back</a>
-      <button @click="dark = !dark" class="theme-toggle">
-        🌗 Toggle {{ dark ? 'Light' : 'Dark' }} Mode
-      </button>
+      <button @click="dark = !dark" class="theme-toggle" x-text="dark ? '🌗 Light Mode' : '🌑 Dark Mode'"></button>
     </div>
   </header>
 
@@ -56,10 +54,7 @@
               scales: {
                 y: {
                   beginAtZero: true,
-                  title: {
-                    display: true,
-                    text: 'Minutes'
-                  }
+                  title: { display: true, text: 'Minutes' }
                 }
               }
             }
