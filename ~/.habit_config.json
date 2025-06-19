@@ -1,8 +1,0 @@
-{
-  "med": { "label": "Meditation", "default_duration": 15 },
-  "grat": { "label": "Gratitude", "default_duration": 10 },
-  "yoga": { "label": "Yoga", "default_duration": 20 },
-  "cardio": { "label": "Cardio", "default_duration": 25 },
-  "weights": { "label": "Weights", "default_duration": 30 },
-  "read": { "label": "Read", "default_duration": 15 }
-}
