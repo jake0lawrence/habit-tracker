@@ -29,7 +29,8 @@ def test_post_log_route(tmp_path):
     client, orig_data, orig_config = make_client(tmp_path)
     try:
         resp = client.post("/log/med", data={"duration": "15", "note": "test"})
-        assert resp.status_code == 204
+        assert resp.status_code == 200
+        assert "<table" in resp.get_data(as_text=True)
         data = read_json(flask_app_module.DATA_FILE)
         today = str(datetime.date.today())
         assert data[today]["med"]["duration"] == 15
@@ -42,7 +43,9 @@ def test_post_mood_route(tmp_path):
     client, orig_data, orig_config = make_client(tmp_path)
     try:
         resp = client.post("/mood", data={"score": "3"})
-        assert resp.status_code == 204
+        assert resp.status_code == 200
+        assert resp.is_json
+        assert resp.get_json()["score"] == 3
         data = read_json(flask_app_module.DATA_FILE)
         today = str(datetime.date.today())
         assert data[today]["mood"] == 3

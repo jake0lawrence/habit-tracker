@@ -17,6 +17,7 @@
 <body x-data="{
   dark: JSON.parse(localStorage.getItem('darkMode') || 'false'),
   mood: {{ mood or 3 }},
+  moodSaved: false,
   showModal: false,
   form: { habit: '', label: '', duration: 15, note: '' }
 }" x-init="$watch('dark', val => localStorage.setItem('darkMode', val))" :class="{ 'dark': dark }">
@@ -54,9 +55,11 @@
   <!-- Mood Tracker -->
   <section class="mood-block">
     <h2>🧠 Mood Score</h2>
-    <form hx-post="/mood" hx-trigger="change" hx-target="this" hx-swap="none">
+    <form hx-post="/mood" hx-trigger="change" hx-target="this" hx-swap="none"
+          hx-on="htmx:afterRequest: moodSaved = true; setTimeout(() => moodSaved = false, 1000)">
       <input type="range" name="score" min="1" max="5" x-model="mood">
       <output x-text="mood" style="margin-left: 0.5em;"></output>
+      <span x-show="moodSaved" class="save-indicator" x-transition>✅</span>
     </form>
   </section>
 
