@@ -6,6 +6,7 @@
   <script src="{{ url_for('static', filename='chart.min.js') }}"></script>
   <script src="{{ url_for('static', filename='alpine.min.js') }}" defer></script>
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+
   {% if config.PWA_ENABLED %}
     <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
     <script>
@@ -14,15 +15,20 @@
       }
     </script>
   {% endif %}
+
   <link rel="icon" type="image/svg+xml" href="/static/icons/icon.svg">
 </head>
-<body x-data="{ dark: JSON.parse(localStorage.getItem('darkMode') || 'false') }" x-init="$watch('dark', val => localStorage.setItem('darkMode', val))" :class="{ 'dark': dark }">
+
+<body x-data="{ dark: JSON.parse(localStorage.getItem('darkMode') || 'false') }"
+      x-init="$watch('dark', val => localStorage.setItem('darkMode', val))"
+      :class="{ 'dark': dark }">
 
   {% if debug %}
   <div class="debug-banner">
     DEBUG MODE ON | Dark: <span x-text="dark"></span> | PWA: {{ config.PWA_ENABLED }}
   </div>
   {% endif %}
+
   <header>
     <h1>📈 Analytics</h1>
     <div class="controls">

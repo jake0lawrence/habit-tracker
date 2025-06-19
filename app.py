@@ -7,6 +7,11 @@ from config import DevConfig, ProdConfig
 app = Flask(__name__)
 app.config.from_object(DevConfig)
 
+# Application mode: 'prod', 'dev', or 'test'.
+APP_MODE = os.getenv("APP_MODE", "prod")
+app.config["APP_MODE"] = APP_MODE
+app.config["PWA_ENABLED"] = APP_MODE == "prod"
+
 DATA_FILE = Path.home() / ".habit_log.json"
 CONFIG_FILE = Path.home() / ".habit_config.json"
 HABITS = {
@@ -78,6 +83,7 @@ def load_config():
         for key, label in HABITS.items()
     }
 
+
 def save_config(cfg):
     with open(CONFIG_FILE, "w") as f:
         json.dump(cfg, f, indent=2)
@@ -113,7 +119,6 @@ def log_habit(habit):
         "note": request.form.get("note", ""),
     }
     save_data(data)
-    # Return updated grid HTML so HTMX can swap it in
     config = load_config()
     week = get_week_range()
     grid = render_template(
@@ -123,7 +128,7 @@ def log_habit(habit):
         week=week,
         today=today,
     )
-    html = f"<div id=\"habit-grid\">{grid}</div>"
+    html = f'<div id="habit-grid">{grid}</div>'
     return html
 
 
@@ -206,14 +211,14 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run the Flask web UI")
     parser.add_argument(
         "--mode",
-        choices=["dev", "prod"],
-        default="dev",
-        help="Select configuration mode",
+        choices=["prod", "dev", "test"],
+        default=os.environ.get("APP_MODE", "prod"),
+        help="Execution mode; disables PWA unless 'prod'"
     )
     parser.add_argument(
         "--debug",
         action="store_true",
-        help="Enable Flask debug mode (overrides $DEBUG)",
+        help="Enable Flask debug mode (overrides $DEBUG)"
     )
     args = parser.parse_args()
 
@@ -222,4 +227,8 @@ if __name__ == "__main__":
 
     env_debug = os.getenv("DEBUG", "").lower() in {"1", "true", "yes"}
     debug = args.debug or env_debug or app.config.get("DEBUG", False)
+
+    app.config["APP_MODE"] = args.mode
+    app.config["PWA_ENABLED"] = args.mode == "prod"
+
     app.run(debug=debug)
