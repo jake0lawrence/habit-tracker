@@ -1,5 +1,5 @@
 <!doctype html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <title>Analytics – habit-track</title>
@@ -27,22 +27,32 @@
           new Chart(document.getElementById("chart-{{ loop.index }}"), {
             type: 'bar',
             data: {
-              labels: {{ labels|tojson }},
+              labels: {{ labels | tojson }},
               datasets: [{
                 label: '{{ chart.label }}',
-                data: {{ chart.data|tojson }},
+                data: {{ chart.data | tojson }},
                 backgroundColor: '#42b983'
               }]
             },
             options: {
               responsive: true,
               plugins: {
-                legend: { display: false }
+                legend: { display: false },
+                tooltip: {
+                  callbacks: {
+                    label: function(ctx) {
+                      return `Duration: ${ctx.raw} min`;
+                    }
+                  }
+                }
               },
               scales: {
                 y: {
                   beginAtZero: true,
-                  ticks: { stepSize: 5 }
+                  title: {
+                    display: true,
+                    text: 'Minutes'
+                  }
                 }
               }
             }
