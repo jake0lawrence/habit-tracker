@@ -6,7 +6,7 @@
   <script src="{{ url_for('static', filename='htmx.min.js') }}"></script>
   <script src="{{ url_for('static', filename='alpine.min.js') }}" defer></script>
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-  {% if 'github.dev' not in request.host %}
+  {% if config.PWA_ENABLED and 'github.dev' not in request.host %}
     <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
     <script>
       navigator.serviceWorker.register("/static/service-worker.js");
@@ -21,6 +21,12 @@
   showModal: false,
   form: { habit: '', label: '', duration: 15, note: '' }
 }" x-init="$watch('dark', val => localStorage.setItem('darkMode', val))" :class="{ 'dark': dark }">
+
+  {% if debug %}
+  <div class="debug-banner">
+    DEBUG MODE ON | Dark: <span x-text="dark"></span> | PWA: {{ config.PWA_ENABLED }}
+  </div>
+  {% endif %}
 
   <header>
     <h1>🌿 habit-track (Web UI)</h1>

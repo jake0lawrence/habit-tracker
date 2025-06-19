@@ -2,8 +2,10 @@ from flask import Flask, render_template, request
 import json, os, datetime, csv
 from pathlib import Path
 from io import StringIO
+from config import DevConfig, ProdConfig
 
 app = Flask(__name__)
+app.config.from_object(DevConfig)
 
 DATA_FILE = Path.home() / ".habit_log.json"
 CONFIG_FILE = Path.home() / ".habit_config.json"
@@ -83,6 +85,7 @@ def save_config(cfg):
 
 @app.route("/")
 def index():
+    debug_mode = request.args.get("debug") == "true"
     today = datetime.date.today()
     week = get_week_range()
     data = load_data()
@@ -97,6 +100,7 @@ def index():
         mood=mood,
         week=week,
         stats=stats,
+        debug=debug_mode,
     )
 
 
@@ -160,6 +164,7 @@ def export_csv():
 
 @app.route("/analytics")
 def analytics():
+    debug_mode = request.args.get("debug") == "true"
     week = get_week_range()
     data = load_data()
     config = load_config()
@@ -174,7 +179,7 @@ def analytics():
         chart_data.append({"label": info["label"], "data": bars})
 
     labels = [d.strftime("%a") for d in week]
-    return render_template("analytics.html", chart_data=chart_data, labels=labels)
+    return render_template("analytics.html", chart_data=chart_data, labels=labels, debug=debug_mode)
 
 
 @app.route("/settings", methods=["GET", "POST"])
@@ -188,6 +193,7 @@ def settings():
             config[key]["default_duration"] = int(
                 request.form.get(f"duration_{key}", config[key]["default_duration"])
             )
+        app.config["PWA_ENABLED"] = request.form.get("pwa_enabled") == "on"
         save_config(config)
         return render_template(
             "settings.html", config=config, message="✅ Settings saved."
@@ -199,12 +205,21 @@ if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(description="Run the Flask web UI")
     parser.add_argument(
+        "--mode",
+        choices=["dev", "prod"],
+        default="dev",
+        help="Select configuration mode",
+    )
+    parser.add_argument(
         "--debug",
         action="store_true",
         help="Enable Flask debug mode (overrides $DEBUG)",
     )
     args = parser.parse_args()
 
+    if args.mode == "prod":
+        app.config.from_object(ProdConfig)
+
     env_debug = os.getenv("DEBUG", "").lower() in {"1", "true", "yes"}
-    debug = args.debug or env_debug
+    debug = args.debug or env_debug or app.config.get("DEBUG", False)
     app.run(debug=debug)
