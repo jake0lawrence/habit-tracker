@@ -3,7 +3,6 @@ const urlsToCache = [
   "/",
   "/analytics",
   "/settings",
-  "/export",
   "/static/styles.css",
   "/static/manifest.json",
   "/static/icons/icon-192.png",
