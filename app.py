@@ -1,9 +1,10 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, redirect
 import json, os, datetime, csv
 from pathlib import Path
 from io import StringIO
 from config import DevConfig, ProdConfig
 import storage
+import openai
 
 app = Flask(__name__)
 app.config.from_object(DevConfig)
@@ -15,6 +16,7 @@ app.config["PWA_ENABLED"] = APP_MODE == "prod"
 
 DATA_FILE = Path.home() / ".habit_log.json"
 CONFIG_FILE = Path.home() / ".habit_config.json"
+JOURNAL_FILE = Path("journal.md")
 HABITS = {
     "med": "Meditation",
     "grat": "Gratitude",
@@ -122,6 +124,55 @@ def load_config():
 def save_config(cfg):
     with open(CONFIG_FILE, "w") as f:
         json.dump(cfg, f, indent=2)
+
+
+def generate_journal_prompt(data):
+    today = datetime.date.today()
+    last_7 = sorted(
+        [(d, entry.get("mood")) for d, entry in data.items() if "mood" in entry]
+    )[-7:]
+
+    avg_mood = (
+        round(sum(score for _, score in last_7) / len(last_7), 1) if last_7 else "N/A"
+    )
+
+    recent_notes = [
+        f"{d}: {entry.get(h, {}).get('note')}"
+        for d, entry in data.items()
+        for h in entry
+        if isinstance(entry.get(h), dict) and entry[h].get("note")
+    ][-3:]
+
+    summary = f"""
+Mood Journal Prompt for {today.strftime('%A, %B %d')}:
+
+- Your 7-day average mood is {avg_mood}/5.
+- Recent notes:
+{chr(10).join(f'- {note}' for note in recent_notes)}
+
+Reflect on:
+- What impacted your best days?
+- What would help you reset for tomorrow?
+"""
+    return summary.strip()
+
+
+def enrich_prompt_with_ai(prompt):
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        return prompt
+    openai.api_key = api_key
+    try:
+        completion = openai.ChatCompletion.create(
+            model="gpt-4",
+            messages=[
+                {"role": "system", "content": "You are a thoughtful self-reflection assistant."},
+                {"role": "user", "content": prompt + "\nPlease expand this into a personal reflection prompt."},
+            ],
+        )
+        return completion.choices[0].message["content"].strip()
+    except Exception:
+        return prompt
 
 
 def get_storage_backend():
@@ -248,6 +299,23 @@ def analytics():
         mood_series=mood_series,
         debug=debug_mode,
     )
+
+
+@app.route("/journal")
+def journal():
+    data = load_data()
+    base_prompt = generate_journal_prompt(data)
+    ai_prompt = enrich_prompt_with_ai(base_prompt)
+    return render_template("journal.html", prompt=ai_prompt)
+
+
+@app.route("/journal-entry", methods=["POST"])
+def save_journal():
+    entry = request.form["entry"]
+    today = datetime.date.today().isoformat()
+    with open(JOURNAL_FILE, "a") as f:
+        f.write(f"\n## {today}\n{entry.strip()}\n")
+    return redirect("/journal")
 
 
 @app.route("/settings", methods=["GET", "POST"])

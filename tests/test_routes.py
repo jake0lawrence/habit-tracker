@@ -152,3 +152,16 @@ def test_pwa_toggle(tmp_path):
     finally:
         flask_app_module.app.config["PWA_ENABLED"] = original
         restore(orig_data, orig_config)
+
+
+def test_journal_route(tmp_path, monkeypatch):
+    client, orig_data, orig_config = make_client(tmp_path)
+    try:
+        def fake_enrich(prompt):
+            return "Prompt"
+        monkeypatch.setattr(flask_app_module, "enrich_prompt_with_ai", fake_enrich)
+        res = client.get("/journal")
+        assert res.status_code == 200
+        assert b"Mood Journal" in res.data
+    finally:
+        restore(orig_data, orig_config)
