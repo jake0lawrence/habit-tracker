@@ -165,3 +165,47 @@ def test_journal_route(tmp_path, monkeypatch):
         assert b"Mood Journal" in res.data
     finally:
         restore(orig_data, orig_config)
+
+
+def test_download_journal(tmp_path):
+    client, orig_data, orig_config = make_client(tmp_path)
+    try:
+        res = client.get("/download-journal?format=txt")
+        assert res.status_code in {200, 404}
+    finally:
+        restore(orig_data, orig_config)
+
+
+def test_ai_model_toggle(monkeypatch):
+    monkeypatch.setenv("AI_MODEL", "gpt-3.5-turbo")
+    monkeypatch.setenv("OPENAI_API_KEY", "test-key")
+
+    called = {}
+
+    class FakeChoice:
+        message = {"content": "ok"}
+
+    class FakeResponse:
+        choices = [FakeChoice]
+
+    def fake_create(model, messages):
+        called["model"] = model
+        return FakeResponse()
+
+    monkeypatch.setattr(flask_app_module.openai.ChatCompletion, "create", fake_create)
+    result = flask_app_module.enrich_prompt_with_ai("Reflect on your week.")
+    assert isinstance(result, str)
+    assert called.get("model") == "gpt-3.5-turbo"
+
+
+def test_journal_history(tmp_path):
+    client, orig_data, orig_config = make_client(tmp_path)
+    orig_journal = flask_app_module.JOURNAL_FILE
+    try:
+        flask_app_module.JOURNAL_FILE = tmp_path / "journal.md"
+        flask_app_module.JOURNAL_FILE.write_text("## 2023-01-01\nentry\n")
+        res = client.get("/journal-history")
+        assert res.status_code == 200
+    finally:
+        flask_app_module.JOURNAL_FILE = orig_journal
+        restore(orig_data, orig_config)
