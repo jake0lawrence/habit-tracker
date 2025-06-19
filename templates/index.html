@@ -24,9 +24,7 @@
   <header>
     <h1>🌿 habit-track (Web UI)</h1>
     <div class="controls">
-      <button @click="dark = !dark" class="theme-toggle">
-        🌗 Toggle {{ dark ? 'Light' : 'Dark' }} Mode
-      </button>
+      <button @click="dark = !dark" class="theme-toggle" x-text="dark ? '🌗 Light Mode' : '🌑 Dark Mode'"></button>
       <a href="/export" class="button">📥 Export as CSV</a>
       <a href="/analytics" class="button">📊 Analytics</a>
       <a href="/settings" class="button">⚙️ Settings</a>
