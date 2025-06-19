@@ -39,6 +39,22 @@ def test_post_log_route(tmp_path):
         restore(orig_data, orig_config)
 
 
+def test_post_log_custom_date(tmp_path):
+    client, orig_data, orig_config = make_client(tmp_path)
+    try:
+        custom_date = (datetime.date.today() - datetime.timedelta(days=1)).isoformat()
+        resp = client.post(
+            "/log/med",
+            data={"duration": "20", "note": "yesterday", "date": custom_date},
+        )
+        assert resp.status_code == 200
+        data = read_json(flask_app_module.DATA_FILE)
+        assert data[custom_date]["med"]["duration"] == 20
+        assert data[custom_date]["med"]["note"] == "yesterday"
+    finally:
+        restore(orig_data, orig_config)
+
+
 def test_post_mood_route(tmp_path):
     client, orig_data, orig_config = make_client(tmp_path)
     try:

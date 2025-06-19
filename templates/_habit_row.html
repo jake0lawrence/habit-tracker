@@ -24,15 +24,16 @@
                   {% endif %}
                   <button
                     class="edit-button"
-                    @click.prevent="
-                      showModal = true;
-                      form.habit = '{{ key }}';
-                      form.label = '{{ label }}';
-                      form.duration = '{{ entry.duration }}';
-                      form.note = `{{ entry.note | e }}`;
-                    "
-                    title="Edit entry"
-                  >🖉</button>
+                  @click.prevent="
+                    showModal = true;
+                    form.habit = '{{ key }}';
+                    form.label = '{{ label }}';
+                    form.duration = '{{ entry.duration }}';
+                    form.note = `{{ entry.note | e }}`;
+                    form.date = '{{ day|string }}';
+                  "
+                  title="Edit entry"
+                >🖉</button>
                 </div>
               {% else %}
                 <button
@@ -42,6 +43,7 @@
                     form.label = '{{ label }}';
                     form.duration = localStorage.getItem(`${form.habit}_duration`) || {{ info.default_duration }};
                     form.note = localStorage.getItem(`${form.habit}_note`) || '';
+                    form.date = '{{ day|string }}';
                   "
                   class="log-button"
                 >Log</button>
