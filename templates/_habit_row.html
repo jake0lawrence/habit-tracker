@@ -8,7 +8,8 @@
     </tr>
   </thead>
   <tbody>
-    {% for key, label in habits.items() %}
+    {% for key, info in habits.items() %}
+      {% set label = info.label %}
       <tr>
         <td>{{ label }}</td>
         {% for day in week %}
@@ -25,8 +26,8 @@
                   showModal = true;
                   form.habit = '{{ key }}';
                   form.label = '{{ label }}';
-                  form.duration = entry?.duration || 15;
-                  form.note = entry?.note || '';
+                  form.duration = localStorage.getItem(`${form.habit}_duration`) || {{ info.default_duration }};
+                  form.note = localStorage.getItem(`${form.habit}_note`) || '';
                 "
                 :title="'Click to log or edit entry'"
                 class="{{ 'done' if entry else '' }}"
