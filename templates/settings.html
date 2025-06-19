@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>⚙️ Settings – habit-track</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+  <header>
+    <h1>⚙️ Settings</h1>
+    <div class="controls">
+      <a href="/" class="button">← Back</a>
+    </div>
+  </header>
+
+  {% if message %}
+    <p style="color: green;">{{ message }}</p>
+  {% endif %}
+
+  <form method="POST">
+    <table>
+      <thead>
+        <tr>
+          <th>Habit Key</th>
+          <th>Label</th>
+          <th>Default Duration (min)</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for key, info in config.items() %}
+        <tr>
+          <td><code>{{ key }}</code></td>
+          <td><input type="text" name="label_{{ key }}" value="{{ info.label }}"></td>
+          <td><input type="number" name="duration_{{ key }}" value="{{ info.default_duration }}" min="1"></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <button type="submit" class="button">💾 Save Settings</button>
+  </form>
+</body>
+</html>
