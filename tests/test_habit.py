@@ -5,7 +5,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-import habit
+import habit  # noqa: E402
 
 runner = CliRunner()
 
