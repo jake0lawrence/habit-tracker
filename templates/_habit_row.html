@@ -20,7 +20,7 @@
             {% if entry.get('note') %}{% set tip = tip ~ ' | Note: ' ~ entry['note'] %}{% endif %}
           {% endif %}
           <td class="{{ 'cell-done' if entry else 'cell-empty' }}">
-            {% if day == today|date %}
+            {% if day|string == today %}
               <button
                 @click.prevent="
                   showModal = true;
