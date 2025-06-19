@@ -13,8 +13,9 @@ HABITS = {
     "yoga": "Yoga",
     "cardio": "Cardio",
     "weights": "Weights",
-    "read": "Read"
+    "read": "Read",
 }
+
 
 def load_data():
     if DATA_FILE.exists():
@@ -25,14 +26,17 @@ def load_data():
             return {}
     return {}
 
+
 def save_data(data):
     with open(DATA_FILE, "w") as f:
         json.dump(data, f, indent=2)
+
 
 def get_week_range():
     today = datetime.date.today()
     start = today - datetime.timedelta(days=today.weekday())
     return [start + datetime.timedelta(days=i) for i in range(7)]
+
 
 def calculate_habit_stats(data, week):
     stats = {}
@@ -56,25 +60,17 @@ def calculate_habit_stats(data, week):
                 streak_broken = True
 
         avg = round(total_duration / count, 1) if count else 0
-        stats[key] = {
-            "label": label,
-            "streak": streak,
-            "avg_duration": avg
-        }
+        stats[key] = {"label": label, "streak": streak, "avg_duration": avg}
     return stats
+
 
 def load_config():
     if CONFIG_FILE.exists():
-        try:
-            with open(CONFIG_FILE) as f:
-                return json.load(f)
-        except json.JSONDecodeError:
-            return {}
-    return {key: {"label": label, "default_duration": 15} for key, label in HABITS.items()}
 
 def save_config(cfg):
     with open(CONFIG_FILE, "w") as f:
         json.dump(cfg, f, indent=2)
+
 
 @app.route("/")
 def index():
@@ -84,7 +80,16 @@ def index():
     mood = data.get(str(today), {}).get("mood")
     config = load_config()
     stats = calculate_habit_stats(data, week)
-    return render_template("index.html", habits=config, data=data, today=str(today), mood=mood, week=week, stats=stats)
+    return render_template(
+        "index.html",
+        habits=config,
+        data=data,
+        today=str(today),
+        mood=mood,
+        week=week,
+        stats=stats,
+    )
+
 
 @app.route("/log/<habit>", methods=["POST"])
 def log_habit(habit):
@@ -92,10 +97,11 @@ def log_habit(habit):
     today = str(datetime.date.today())
     data.setdefault(today, {})[habit] = {
         "duration": int(request.form.get("duration", 1)),
-        "note": request.form.get("note", "")
+        "note": request.form.get("note", ""),
     }
     save_data(data)
     return ("", 204)
+
 
 @app.route("/mood", methods=["POST"])
 def log_mood():
@@ -105,6 +111,7 @@ def log_mood():
     data.setdefault(today, {})["mood"] = score
     save_data(data)
     return ("", 204)
+
 
 @app.route("/export")
 def export_csv():
@@ -126,9 +133,10 @@ def export_csv():
     output.seek(0)
     return app.response_class(
         output.getvalue(),
-        mimetype='text/csv',
-        headers={"Content-Disposition": "attachment;filename=habit_week.csv"}
+        mimetype="text/csv",
+        headers={"Content-Disposition": "attachment;filename=habit_week.csv"},
     )
+
 
 @app.route("/analytics")
 def analytics():
@@ -143,24 +151,29 @@ def analytics():
             entry = data.get(str(day), {}).get(key)
             val = entry.get("duration", 0) if isinstance(entry, dict) else 0
             bars.append(val)
-        chart_data.append({
-            "label": info["label"],
-            "data": bars
-        })
+        chart_data.append({"label": info["label"], "data": bars})
 
     labels = [d.strftime("%a") for d in week]
     return render_template("analytics.html", chart_data=chart_data, labels=labels)
+
 
 @app.route("/settings", methods=["GET", "POST"])
 def settings():
     config = load_config()
     if request.method == "POST":
         for key in HABITS.keys():
-            config[key]["label"] = request.form.get(f"label_{key}", config[key]["label"])
-            config[key]["default_duration"] = int(request.form.get(f"duration_{key}", config[key]["default_duration"]))
+            config[key]["label"] = request.form.get(
+                f"label_{key}", config[key]["label"]
+            )
+            config[key]["default_duration"] = int(
+                request.form.get(f"duration_{key}", config[key]["default_duration"])
+            )
         save_config(config)
-        return render_template("settings.html", config=config, message="✅ Settings saved.")
+        return render_template(
+            "settings.html", config=config, message="✅ Settings saved."
+        )
     return render_template("settings.html", config=config, message=None)
+
 
 if __name__ == "__main__":
     app.run(debug=True)
