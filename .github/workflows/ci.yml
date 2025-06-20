@@ -21,10 +21,19 @@ jobs:
       # Start Flask app in background
       - run: python app.py &
 
-      # Give the server time to bind :5000
-      - run: sleep 5
+      # Wait until the server responds on port 5000 (max 30 s)
+      - name: Wait for Flask
+        run: |
+          for i in {1..30}; do
+            if curl -s http://127.0.0.1:5000/ >/dev/null; then
+              echo "Flask is up!"
+              break
+            fi
+            echo "Waiting for server… ($i)"
+            sleep 1
+          done
 
-      # Optional: make base URL configurable in tests
+      # Export base URL for Playwright tests
       - run: echo "BASE_URL=http://127.0.0.1:5000" >> $GITHUB_ENV
 
       # Run end-to-end tests
