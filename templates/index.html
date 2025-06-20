@@ -108,7 +108,7 @@
       <input type="number" name="duration" x-model="form.duration" min="1" required>
 
       <label>Note:</label>
-      <input type="text" name="note" x-model="form.note" placeholder='Optional note'>
+      <input type="text" name="note" x-model="form.note" placeholder="Optional note">
 
       <div class="modal-actions">
         <button type="submit">✅ Save</button>
@@ -118,21 +118,48 @@
   </div>
 </div>
 
+<!-- ── Toast element ─────────────────────────────────────────────────── -->
+<div  x-ref="toast"
+      :class="{'toast': true, 'show': toast.show, 'error': toast.error}">
+  <span x-text="toast.message"></span>
+</div>
+
 <script>
   function getAppState () {
     return {
+      // reactive state
       dark      : JSON.parse(localStorage.getItem('darkMode') || 'false'),
       mood      : {{ mood or 3 }},
       moodSaved : false,
       showModal : false,
       form      : { habit:'', label:'', duration:15, note:'', date:'' },
-      moodStats : JSON.parse(document.getElementById('mood-data').textContent)
+      moodStats : JSON.parse(document.getElementById('mood-data').textContent),
+
+      // toast state
+      toast: { show:false, message:'', error:false },
+
+      showToast(msg, isError=false) {
+        this.toast.message = msg;
+        this.toast.error   = isError;
+        this.toast.show    = true;
+        setTimeout(() => this.toast.show = false, 3000);
+      }
     }
   }
 </script>
+
 <script>
+  /* Success toast after habit grid swap */
+  htmx.on('htmx:afterSwap', e => {
+    if (e.detail.target.id === 'habit-grid') {
+      document.body.__x.$data.showToast('Saved ✔️');
+    }
+  });
+
+  /* Error toast for non-200 responses */
   htmx.on('htmx:responseError', e => {
-    alert(`Save failed – server returned ${e.detail.xhr.status}`);
+    const code = e.detail.xhr.status;
+    document.body.__x.$data.showToast(`Save failed (${code})`, true);
   });
 </script>
 </body>
