@@ -1,5 +1,6 @@
 name: test
 on: [push]
+
 jobs:
   unit:
     runs-on: ubuntu-latest
@@ -7,11 +8,24 @@ jobs:
       - uses: actions/checkout@v4
       - run: pip install -r requirements.txt
       - run: pytest -q
+
   e2e:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      # Node / Playwright setup
       - run: npm ci
       - run: npx playwright install --with-deps
+
+      # Start Flask app in background
       - run: python app.py &
+
+      # Give the server time to bind :5000
+      - run: sleep 5
+
+      # Optional: make base URL configurable in tests
+      - run: echo "BASE_URL=http://127.0.0.1:5000" >> $GITHUB_ENV
+
+      # Run end-to-end tests
       - run: npx playwright test
