@@ -10,7 +10,7 @@
 
   <tbody>
   {% for key, info in habits.items() %}
-    {% set label   = info.label %}
+    {% set label = info.label %}
     <tr>
       <td>{{ label }}</td>
 
@@ -26,12 +26,14 @@
             {% if entry is mapping %}
               <div class="entry-summary">
                 ✅ {{ entry.duration }} min
-                {% if entry.note %}<div class="entry-note">📝 {{ entry.note }}</div>{% endif %}
+                {% if entry.note %}
+                  <div class="entry-note">📝 {{ entry.note }}</div>
+                {% endif %}
 
                 <button
                   class="edit-button"
                   @click.prevent="
-                    $root.showModal  = true;
+                    $root.showModal = true;
                     $root.form = {
                       habit    : '{{ key }}',
                       label    : '{{ label }}',
@@ -48,7 +50,7 @@
               <button
                 class="log-button"
                 @click.prevent="
-                  $root.showModal  = true;
+                  $root.showModal = true;
                   $root.form = {
                     habit    : '{{ key }}',
                     label    : '{{ label }}',
@@ -65,7 +67,9 @@
             {% if entry is mapping %}
               <div class="entry-summary">
                 ✅ {{ entry.duration }} min
-                {% if entry.note %}<div class="entry-note">📝 {{ entry.note }}</div>{% endif %}
+                {% if entry.note %}
+                  <div class="entry-note">📝 {{ entry.note }}</div>
+                {% endif %}
               </div>
             {% else %}
               –
