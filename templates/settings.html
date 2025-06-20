@@ -3,29 +3,38 @@
 <head>
   <meta charset="utf-8">
   <title>⚙️ Settings – habit-track</title>
+
+  <!-- JS -->
   <script src="{{ url_for('static', filename='alpine.min.js') }}" defer></script>
+
+  <!-- CSS -->
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 
   {% if config.PWA_ENABLED and 'github.dev' not in request.host %}
     <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
     <script>
-      if ("serviceWorker" in navigator) {
-        navigator.serviceWorker.register("/static/service-worker.js");
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register(
+          "{{ url_for('static', filename='service-worker.js') }}"
+        );
       }
     </script>
   {% endif %}
 
   <link rel="icon" type="image/svg+xml" href="/static/icons/icon.svg">
 </head>
+
 <body x-data="{ dark: JSON.parse(localStorage.getItem('darkMode') || 'false') }"
-      x-init="$watch('dark', val => localStorage.setItem('darkMode', val))"
-      :class="{ 'dark': dark }">
+      x-init="$watch('dark', v => localStorage.setItem('darkMode', v))"
+      :class="{ dark }">
 
   <header>
     <h1>⚙️ Settings</h1>
     <div class="controls">
       <a href="/" class="button">← Back</a>
-      <button @click="dark = !dark" class="theme-toggle" x-text="dark ? '🌗 Light Mode' : '🌑 Dark Mode'"></button>
+      <button class="theme-toggle"
+              @click="dark = !dark"
+              x-text="dark ? '🌗 Light Mode' : '🌑 Dark Mode'"></button>
       <a href="/journal-history" class="button">📜 View Past Journals</a>
     </div>
   </header>
@@ -40,20 +49,16 @@
         <tr>
           <th>Habit Key</th>
           <th>Label</th>
-          <th>Default Duration (min)</th>
+          <th>Default Duration&nbsp;(min)</th>
         </tr>
       </thead>
       <tbody>
         {% for key, info in config.items() %}
-        <tr>
-          <td><code>{{ key }}</code></td>
-          <td>
-            <input type="text" name="label_{{ key }}" value="{{ info.label }}">
-          </td>
-          <td>
-            <input type="number" name="duration_{{ key }}" value="{{ info.default_duration }}" min="1">
-          </td>
-        </tr>
+          <tr>
+            <td><code>{{ key }}</code></td>
+            <td><input type="text"   name="label_{{ key }}"    value="{{ info.label }}"></td>
+            <td><input type="number" name="duration_{{ key }}" value="{{ info.default_duration }}" min="1"></td>
+          </tr>
         {% endfor %}
       </tbody>
     </table>
