@@ -5,7 +5,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-import habit  # noqa: E402 — added to path above
+import habit  # noqa: E402
 
 runner = CliRunner()
 
@@ -25,8 +25,8 @@ def test_log_unknown_habit(tmp_path):
     orig_file = habit.DATA_FILE
     habit.DATA_FILE = tmp_path / "habit.json"
     try:
-        # mix_stderr=False pipes stderr → stdout so we can assert on .output
-        result = runner.invoke(habit.app, ["log", "invalid"], mix_stderr=False)
+        # Click < 8.1 merges stderr into .output by default
+        result = runner.invoke(habit.app, ["log", "invalid"])
         assert result.exit_code != 0
         assert "Unknown habit key" in result.output
     finally:
