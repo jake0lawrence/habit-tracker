@@ -32,6 +32,7 @@
 
                 <button
                   class="edit-button"
+                  data-testid="edit-{{ key }}"
                   @click.prevent="
                     showModal = true;
                     form = {
@@ -49,6 +50,7 @@
             {% else %}
               <button
                 class="log-button"
+                data-testid="log-{{ key }}"
                 @click.prevent="
                   showModal = true;
                   form = {

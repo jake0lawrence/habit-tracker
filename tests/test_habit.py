@@ -7,7 +7,7 @@ sys.path.insert(0, str(ROOT))
 
 import habit
 
-runner = CliRunner(mix_stderr=False)
+runner = CliRunner()
 
 
 def test_load_data_missing_file(tmp_path):
