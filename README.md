@@ -1,139 +1,140 @@
-# Habit Tracker — ADHD-Friendly Habit & Mood Tracker
+# Habit-Track — ADHD-Friendly Habit, Mood & Journal Tracker
 
 [![CI](https://github.com/jake0lawrence/habit-track-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/jake0lawrence/habit-track-cli/actions)
 [![Live on Render](https://img.shields.io/badge/%E2%9C%85%20LIVE%20on%20Render-00c7b7?style=flat-square&logo=render&logoColor=white)](https://habit-track-cli.onrender.com)
 
-A tiny, distraction-free habit & mood tracker built with **Flask + htmx + Alpine.js** and packaged as an optional PWA for offline use.
+A tiny, distraction-free tracker built with **Flask + htmx + Alpine.js**.  
+Log habits & moods in seconds, jot AI-seeded journal entries, and review analytics—all offline-capable via PWA.
 
 ---
 
-## ✨ Features (June 2025)
+## ✨ Feature Matrix (June 2025)
 
-| Feature | Details |
-|---------|---------|
-| Fast ✨ | Single-page UI—htmx swaps only the habit grid, no full reloads. |
-| Modal logging | “Log” / “Edit” buttons open a modal pre-filled from `localStorage`. |
-| Static `/log` endpoint | Form always posts to `/log`; the habit key is sent as a hidden field—no Alpine/htmx race conditions. |
+| Category | Feature | Details |
+|----------|---------|---------|
+| **Habits** | Modal logging | “Log / Edit” auto-prefilled from `localStorage`. |
+| | Static `/log` endpoint | Eliminates Alpine/htmx timing bugs. |
 | Error alerts | Failed saves trigger a visible htmx alert. |
-| Mood tracking | 1-5 slider with live ✅ indicator and rolling averages. |
-| Dark mode | Persists via `localStorage`. |
-| PWA | Optional service worker & manifest (`ENABLE_PWA` toggle in settings). |
-| Data ownership | JSON on localhost, SQLite or Postgres in production. |
-| Tests | Pytest unit coverage **+** Playwright end-to-end smoke. |
-| CI | GitHub Actions runs unit & e2e tests on every push. |
+| **Mood** | 1–5 slider | Instant ✅ indicator, rolling averages in summary tiles. |
+| **Journal** | OpenAI prompt *(opt-in)* | Generates a reflective writing prompt based on today’s mood & streaks. |
+| | `/journal-entry` save | Saves entry to DB/JSON; auto-redirects to “Journal History”. |
+| | `/journal-history` page | Chronological reader with export buttons (`.txt` / `.zip`). |
+| **Analytics** | `/analytics` dashboard | Bar charts per habit + line chart of mood over time (Chart.js). |
+| **UX** | Dark mode toggle | Persists via `localStorage`. |
+| | Toast notifications | Green “Saved ✔️” & red error toasts (htmx hooks). |
+| **Offline** | PWA | `ENABLE_PWA=1` serves manifest & Workbox service-worker. |
+| **Data** | Local JSON → SQLite/Postgres (prod) | Own your data; easy to back up. |
+| **Quality** | Tests | Pytest unit + Playwright E2E (“Log → Save → ✅”). |
+| | CI | GitHub Actions runs both suites on every push. |
 
 ---
 
-## 🗺️ Current Habit Roster
+## 🗺️ Default Habits
 
 | Habit | Frequency | “Done” definition |
 |-------|-----------|-------------------|
 | Meditation | Daily | ≥ 2 min timer |
 | Gratitude | Daily | ≥ 1 sentence |
-| Yoga | 3 × / week | ≥ 5 min |
-| Cardio | 3 × / week | ≥ 5 min |
-| Weights | 3 × / week | ≥ 1 set |
-| Reading | 3 × / week | ≥ 1 page |
+| Yoga | 3× / week | ≥ 5 min |
+| Cardio | 3× / week | ≥ 5 min |
+| Weights | 3× / week | ≥ 1 set |
+| Reading | 3× / week | ≥ 1 page |
 
-*(You can rename habits and default durations in **⚙️ Settings**.)*
+*(Customise names & defaults in **⚙️ Settings** or edit `config.json`.)*
 
 ---
 
 ## 💻 Local Setup
 
 ```bash
-# 1 · Clone
 git clone https://github.com/jake0lawrence/habit-track-cli.git
 cd habit-track-cli
-
-# 2 · Python venv
 python -m venv .venv && source .venv/bin/activate
-
-# 3 · Install deps (Typer optional; web UI has no CLI dep)
 pip install -r requirements.txt
+# ⬇️ Optional: enable AI journal prompts
+export OPENAI_API_KEY=sk-********************************
 
-# 4 · Run dev server (auto-reload + debug)
-python app.py            # or: FLASK_DEBUG=1 python app.py
+python app.py   # auto-reload + debug if FLASK_DEBUG=1
 ````
 
-Open [http://localhost:5000](http://localhost:5000) and start logging.
+Open [http://localhost:5000](http://localhost:5000) & start tracking.
 
-### 🧪 Tests
+---
+
+## 🧪 Tests
 
 ```bash
-# Unit tests
-pytest -q
-
-# Playwright smoke test
-npm ci
-npx playwright install --with-deps
-npx playwright test
+pytest -q                     # unit tests
+npm ci && npx playwright test # E2E smoke
 ```
 
 ---
 
-## 🚀 Deployment (Heroku/Render/Fly)
+## 🚀 Deployment (Render/Heroku/Fly)
 
-1. Set **`DATABASE_URL`** (optional) for Postgres; otherwise the app falls back to SQLite on disk.
-2. Flip **`ENABLE_PWA=1`** to serve the manifest & service worker.
-3. Start command:
+| Variable         | Purpose                    | Default                   |
+| ---------------- | -------------------------- | ------------------------- |
+| `DATABASE_URL`   | Postgres connection        | uses SQLite file if unset |
+| `ENABLE_PWA`     | `1` to serve manifest & SW | `0`                       |
+| `OPENAI_API_KEY` | Enables journal prompt     | prompts disabled if empty |
 
-   ```bash
-   gunicorn app:app --bind 0.0.0.0:$PORT
-   ```
+Start command:
 
-A “Deploy to Render” button is in `/docs/deploy-render.md` if you prefer one-click.
+```bash
+gunicorn app:app --bind 0.0.0.0:$PORT
+```
 
----
-
-## 🔬 Design & Architecture
-
-* **docs/architecture.md** — data model, template flow, PWA notes
-* **tests/** — Pytest & Playwright specs
-* **ci.yml** — unit + e2e pipeline
+Need one-click? See `/docs/deploy-render.md`.
 
 ---
 
-## 🛠 Tech Stack
+## 🔬 More Docs
 
-| Layer             | Library                       |
-| ----------------- | ----------------------------- |
-| Backend           | Flask 2                       |
-| Frontend micro-JS | htmx 1.9 • Alpine 3.13        |
-| Styling           | vanilla CSS (dark-mode class) |
-| PWA               | Service worker via Workbox    |
-| Tests             | Pytest • Playwright           |
+* **[docs/architecture.md](docs/architecture.md)** — data model, request flow, PWA notes  
+* **[docs/tasks.md](docs/tasks.md)** — open roadmap with emoji effort tags  
+* **[docs/deploy-render.md](docs/deploy-render.md)** — one-click & manual deploy steps for Render  
+* **[tests/](tests/)** — Pytest & Playwright specs  
+* **[.github/workflows/ci.yml](.github/workflows/ci.yml)** — full CI pipeline
+
+---
+
+## 🔧 Tech Stack
+
+| Layer             | Library                             |
+| ----------------- | ----------------------------------- |
+| Backend           | Flask 2.x                           |
+| Frontend micro-JS | htmx 1.9 • Alpine 3.13              |
+| Charts            | Chart.js 4 (deferred import)        |
+| Styling           | Vanilla CSS (dark-mode class)       |
+| AI Journal        | OpenAI GPT-4o via `/journal-prompt` |
+| PWA               | Workbox service-worker              |
+| Tests             | Pytest • Playwright                 |
 
 ---
 
 ## ❓ FAQ
 
-**Why is the Save button finally reliable?**
-The modal form now posts to a *fixed* `/log` URL and passes `habit` in a hidden field, so htmx binds once at page-load—no dynamic attribute binding races.
+**How do AI journal prompts work?**
+If `OPENAI_API_KEY` is present, opening the Journal page (`/journal`) calls
+OpenAI with today’s mood & streak data and displays a tailored writing prompt.
+
+**What if I don’t want AI at all?**
+Leave `OPENAI_API_KEY` unset; you can still type entries manually.
 
 **CLI still supported?**
-Yes, but it’s optional. The Typer commands live in `habit.py`; they log to the
-same JSON/DB backend the web UI uses.
+Yes—`habit.py` offers `log`, `mood`, `show` commands for terminal fans,
+backed by the same JSON/DB layer.
 
 ---
 
-Happy tracking!
-*PRs and issue reports are welcome.* 🎉
+Happy tracking & journaling!
+*PRs and issue reports are welcome.* 🌱
 
-```
 
----
+## Key additions
 
-### What changed vs. the old README
-
-| Section | Change |
-|---------|--------|
-| Badges & tagline | Switched wording to *Flask + htmx* (no longer Typer-only). |
-| Features | Added static `/log`, modal, PWA, tests, CI. |
-| Installation | Removed `python habit.py show` from the quick-start; CLI now optional. |
-| Usage demo | Dropped the outdated Rich GIF placeholder (you can add new screenshots later). |
-| Docs / Design links | Point to `docs/architecture.md`. |
-| FAQ | Explains the “Save button reliability” refactor. |
-
-If you have any project-specific links (e.g., updated architecture doc filename), tweak those paths before committing.
-```
+* New **Journal** section in the feature table + env var note  
+* `/journal`, `/journal-history`, `/analytics` explained  
+* Toasts & Chart.js called out  
+* OpenAI API setup documented  
+* FAQ updated accordingly
