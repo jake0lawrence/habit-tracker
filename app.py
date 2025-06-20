@@ -205,19 +205,18 @@ def index():
     )
 
 
-@app.route("/log/<habit>", methods=["POST"])
-def log_habit(habit):
+@app.post("/log")
+def log_habit():
+    habit = request.form["habit"]
+    duration = int(request.form["duration"])
+    note = request.form.get("note", "").strip()
+    target_date = request.form["date"]
+
     backend = get_storage_backend()
-    target_date = request.form.get("date", str(datetime.date.today()))
     if request.args.get("delete") == "1":
         backend.delete_habit(target_date, habit)
     else:
-        backend.save_habit(
-            target_date,
-            habit,
-            int(request.form.get("duration", 1)),
-            request.form.get("note", ""),
-        )
+        backend.save_habit(target_date, habit, duration, note)
 
     week = get_week_range()
     data = backend.get_range(str(week[0]), str(week[-1]))

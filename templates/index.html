@@ -93,15 +93,16 @@
   <div class="modal-content" @click.outside="showModal=false">
     <h3 x-text="form.label"></h3>
 
-    <form  :hx-post="`/log/${form.habit}`"
-           hx-target="#habit-grid"
-           hx-swap="outerHTML"
-           @submit.prevent="
-             localStorage.setItem(`${form.habit}_duration`, form.duration);
-             localStorage.setItem(`${form.habit}_note`,     form.note);
-             showModal=false">
+    <form hx-post="/log"
+          hx-target="#habit-grid"
+          hx-swap="outerHTML"
+          @submit.prevent="
+            localStorage.setItem(`${form.habit}_duration`, form.duration);
+            localStorage.setItem(`${form.habit}_note`,     form.note);
+            showModal = false">
 
-      <input type="hidden" name="date" :value="form.date">
+      <input type="hidden" name="habit" :value="form.habit">
+      <input type="hidden" name="date"  :value="form.date">
 
       <label>Duration (minutes):</label>
       <input type="number" name="duration" x-model="form.duration" min="1" required>
@@ -128,6 +129,11 @@
       moodStats : JSON.parse(document.getElementById('mood-data').textContent)
     }
   }
+</script>
+<script>
+  htmx.on('htmx:responseError', e => {
+    alert(`Save failed – server returned ${e.detail.xhr.status}`);
+  });
 </script>
 </body>
 </html>
