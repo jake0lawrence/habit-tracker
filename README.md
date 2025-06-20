@@ -14,6 +14,7 @@ A tiny, distraction-free habit & mood tracker built with **Flask + htmx + Alpine
 | Fast ✨ | Single-page UI—htmx swaps only the habit grid, no full reloads. |
 | Modal logging | “Log” / “Edit” buttons open a modal pre-filled from `localStorage`. |
 | Static `/log` endpoint | Form always posts to `/log`; the habit key is sent as a hidden field—no Alpine/htmx race conditions. |
+| Error alerts | Failed saves trigger a visible htmx alert. |
 | Mood tracking | 1-5 slider with live ✅ indicator and rolling averages. |
 | Dark mode | Persists via `localStorage`. |
 | PWA | Optional service worker & manifest (`ENABLE_PWA` toggle in settings). |
