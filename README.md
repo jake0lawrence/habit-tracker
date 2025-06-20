@@ -1,79 +1,138 @@
-# Habit Tracker
+# Habit Tracker — ADHD-Friendly Habit & Mood Tracker
+
 [![CI](https://github.com/jake0lawrence/habit-track-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/jake0lawrence/habit-track-cli/actions)
 [![Live on Render](https://img.shields.io/badge/%E2%9C%85%20LIVE%20on%20Render-00c7b7?style=flat-square&logo=render&logoColor=white)](https://habit-track-cli.onrender.com)
 
-Tiny, ADHD‑friendly habit & mood tracker built with [Typer](https://typer.tiangolo.com/) and [Rich](https://rich.readthedocs.io/).
+A tiny, distraction-free habit & mood tracker built with **Flask + htmx + Alpine.js** and packaged as an optional PWA for offline use.
 
-## Why?
+---
 
-I needed a friction‑free way to log six core habits and a 1‑5 mood score without app overload:
+## ✨ Features (June 2025)
+
+| Feature | Details |
+|---------|---------|
+| Fast ✨ | Single-page UI—htmx swaps only the habit grid, no full reloads. |
+| Modal logging | “Log” / “Edit” buttons open a modal pre-filled from `localStorage`. |
+| Static `/log` endpoint | Form always posts to `/log`; the habit key is sent as a hidden field—no Alpine/htmx race conditions. |
+| Mood tracking | 1-5 slider with live ✅ indicator and rolling averages. |
+| Dark mode | Persists via `localStorage`. |
+| PWA | Optional service worker & manifest (`ENABLE_PWA` toggle in settings). |
+| Data ownership | JSON on localhost, SQLite or Postgres in production. |
+| Tests | Pytest unit coverage **+** Playwright end-to-end smoke. |
+| CI | GitHub Actions runs unit & e2e tests on every push. |
+
+---
+
+## 🗺️ Current Habit Roster
 
 | Habit | Frequency | “Done” definition |
 |-------|-----------|-------------------|
-| Meditation | daily | ≥ 2 min timer |
-| Gratitude | daily | ≥ 1 sentence |
-| Yoga | 3×/wk | ≥ 5 min stretch |
-| Cardio | 3×/wk | ≥ 5 min walk |
-| Weights | 3×/wk | 1 exercise set |
-| Reading | 3×/wk | ≥ 1 page |
+| Meditation | Daily | ≥ 2 min timer |
+| Gratitude | Daily | ≥ 1 sentence |
+| Yoga | 3 × / week | ≥ 5 min |
+| Cardio | 3 × / week | ≥ 5 min |
+| Weights | 3 × / week | ≥ 1 set |
+| Reading | 3 × / week | ≥ 1 page |
 
-The CLI writes plain JSON/SQLite so I own the data and can graph it anywhere.
+*(You can rename habits and default durations in **⚙️ Settings**.)*
 
-## Installation
+---
 
-### 🔧 Local Development Setup
+## 💻 Local Setup
 
 ```bash
-# Clone the repo
+# 1 · Clone
 git clone https://github.com/jake0lawrence/habit-track-cli.git
 cd habit-track-cli
 
-# Create and activate a virtual environment
-python -m venv .venv
-source .venv/bin/activate
+# 2 · Python venv
+python -m venv .venv && source .venv/bin/activate
 
-# Install dependencies
+# 3 · Install deps (Typer optional; web UI has no CLI dep)
 pip install -r requirements.txt
 
-# Run the app
-python habit.py show
+# 4 · Run dev server (auto-reload + debug)
+python app.py            # or: FLASK_DEBUG=1 python app.py
+````
 
-# Run the web UI (add --debug or set DEBUG=1 to enable Flask debugging)
-python app.py [--debug]
-```
-## Usage
+Open [http://localhost:5000](http://localhost:5000) and start logging.
 
-| Habit | Key | Frequency |
-|-------|-----|-----------|
-| Meditation | `med` | Daily |
-| Gratitude Journal | `grat` | Daily |
-| Yoga | `yoga` | 3×/week |
-| Cardio | `cardio` | 3×/week |
-| Weight Lifting | `weights` | 3×/week |
-| Reading | `read` | 3×/week |
-
-### Example commands
+### 🧪 Tests
 
 ```bash
-python habit.py log med 5     # ✅ logs 5 mins of meditation
-python habit.py mood 4        # 🧠 logs a 4/5 mood
-python habit.py show          # 📊 weekly grid
+# Unit tests
+pytest -q
+
+# Playwright smoke test
+npm ci
+npx playwright install --with-deps
+npx playwright test
 ```
-## Demo
 
-<!-- TODO: replace with real demo -->
-![CLI demo](docs/demo.gif)
+---
 
-## Documentation
+## 🚀 Deployment (Heroku/Render/Fly)
 
-- [Design Notes](docs/architecture.md)
+1. Set **`DATABASE_URL`** (optional) for Postgres; otherwise the app falls back to SQLite on disk.
+2. Flip **`ENABLE_PWA=1`** to serve the manifest & service worker.
+3. Start command:
 
-### Deploy to Render
+   ```bash
+   gunicorn app:app --bind 0.0.0.0:$PORT
+   ```
 
-[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?)
+A “Deploy to Render” button is in `/docs/deploy-render.md` if you prefer one-click.
 
-Local development stores data in `~/.habit_log.json`. When deployed to Render,
-the app uses an SQLite database persisted on the attached disk or an optional
-Postgres database if `DATABASE_URL` is provided.
+---
 
+## 🔬 Design & Architecture
 
+* **docs/architecture.md** — data model, template flow, PWA notes
+* **tests/** — Pytest & Playwright specs
+* **ci.yml** — unit + e2e pipeline
+
+---
+
+## 🛠 Tech Stack
+
+| Layer             | Library                       |
+| ----------------- | ----------------------------- |
+| Backend           | Flask 2                       |
+| Frontend micro-JS | htmx 1.9 • Alpine 3.13        |
+| Styling           | vanilla CSS (dark-mode class) |
+| PWA               | Service worker via Workbox    |
+| Tests             | Pytest • Playwright           |
+
+---
+
+## ❓ FAQ
+
+**Why is the Save button finally reliable?**
+The modal form now posts to a *fixed* `/log` URL and passes `habit` in a hidden field, so htmx binds once at page-load—no dynamic attribute binding races.
+
+**CLI still supported?**
+Yes, but it’s optional. The Typer commands live in `habit.py`; they log to the
+same JSON/DB backend the web UI uses.
+
+---
+
+Happy tracking!
+*PRs and issue reports are welcome.* 🎉
+
+```
+
+---
+
+### What changed vs. the old README
+
+| Section | Change |
+|---------|--------|
+| Badges & tagline | Switched wording to *Flask + htmx* (no longer Typer-only). |
+| Features | Added static `/log`, modal, PWA, tests, CI. |
+| Installation | Removed `python habit.py show` from the quick-start; CLI now optional. |
+| Usage demo | Dropped the outdated Rich GIF placeholder (you can add new screenshots later). |
+| Docs / Design links | Point to `docs/architecture.md`. |
+| FAQ | Explains the “Save button reliability” refactor. |
+
+If you have any project-specific links (e.g., updated architecture doc filename), tweak those paths before committing.
+```
