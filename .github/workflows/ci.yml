@@ -14,27 +14,35 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Node / Playwright setup
+      # ── Install Node + Playwright ───────────────────────────────────────────
       - run: npm ci
       - run: npx playwright install --with-deps
 
-      # Start Flask app in background
-      - run: python app.py &
+      # ── Python deps (gunicorn comes from requirements.txt) ────────────────
+      - run: pip install -r requirements.txt
 
-      # Wait until the server responds on port 5000 (max 30 s)
-      - name: Wait for Flask
+      # ── Start Flask app with Gunicorn in background ───────────────────────
+      - name: Launch server
         run: |
-          for i in {1..30}; do
+          gunicorn app:app --bind 127.0.0.1:5000 --workers 1 --daemon
+          echo "Gunicorn PID: $(pgrep -f 'gunicorn app:app')"
+
+      # ── Wait until port 5000 responds (max 60 s) ──────────────────────────
+      - name: Wait for server
+        run: |
+          for i in {1..60}; do
             if curl -s http://127.0.0.1:5000/ >/dev/null; then
-              echo "Flask is up!"
-              break
+              echo "Server is up after $i seconds."
+              exit 0
             fi
-            echo "Waiting for server… ($i)"
+            echo "Waiting… ($i)"
             sleep 1
           done
+          echo "Server failed to start in 60 s" >&2
+          exit 1
 
-      # Export base URL for Playwright tests
+      # ── Export base URL for Playwright tests ──────────────────────────────
       - run: echo "BASE_URL=http://127.0.0.1:5000" >> $GITHUB_ENV
 
-      # Run end-to-end tests
+      # ── Run end-to-end tests ──────────────────────────────────────────────
       - run: npx playwright test
