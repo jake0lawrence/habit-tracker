@@ -21,11 +21,11 @@
         {% set entry = data.get(day|string, {}).get(key) %}
         <td class="{{ 'cell-done' if entry else 'cell-empty' }}">
 
-          {# ─────────────── TODAY – show Log / Edit buttons ─────────────── #}
+          {# ─────────────── TODAY – Log / Edit buttons ─────────────── #}
           {% if day|string == today %}
             {% if entry is mapping %}
               <div class="entry-summary">
-                ✅ {{ entry.duration }} min
+                ✅ {{ entry.duration }}&nbsp;min
                 {% if entry.note %}
                   <div class="entry-note">📝 {{ entry.note }}</div>
                 {% endif %}
@@ -33,11 +33,11 @@
                 <button
                   class="edit-button"
                   @click.prevent="
-                    showModal = true;
-                    form = {
+                    $root.showModal = true;
+                    $root.form = {
                       habit:    '{{ key }}',
                       label:    '{{ label }}',
-                      duration: '{{ entry.duration }}',
+                      duration: {{ entry.duration }},
                       note:     `{{ entry.note | e }}`,
                       date:     '{{ day|string }}'
                     };
@@ -50,23 +50,23 @@
               <button
                 class="log-button"
                 @click.prevent="
-                  showModal = true;
-                  form = {
+                  $root.showModal = true;
+                  $root.form = {
                     habit:    '{{ key }}',
                     label:    '{{ label }}',
-                    duration: localStorage.getItem('{{ key }}_duration') || {{ info.default_duration }},
-                    note:     localStorage.getItem('{{ key }}_note')      || '',
+                    duration: parseInt(localStorage.getItem('{{ key }}_duration')) || {{ info.default_duration }},
+                    note:     localStorage.getItem('{{ key }}_note') || '',
                     date:     '{{ day|string }}'
                   };
                 "
               >Log</button>
             {% endif %}
 
-          {# ─────────────── PAST / FUTURE DAYS – summary or dash ─────────── #}
+          {# ─────────────── PAST / FUTURE DAYS ─────────── #}
           {% else %}
             {% if entry is mapping %}
               <div class="entry-summary">
-                ✅ {{ entry.duration }} min
+                ✅ {{ entry.duration }}&nbsp;min
                 {% if entry.note %}
                   <div class="entry-note">📝 {{ entry.note }}</div>
                 {% endif %}
