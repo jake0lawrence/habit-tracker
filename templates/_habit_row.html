@@ -7,47 +7,60 @@
       {% endfor %}
     </tr>
   </thead>
+
   <tbody>
     {% for key, info in habits.items() %}
       {% set label = info.label %}
       <tr>
         <td>{{ label }}</td>
+
         {% for day in week %}
           {% set entry = data.get(day|string, {}).get(key) %}
           <td class="{{ 'cell-done' if entry else 'cell-empty' }}">
+
+            {# ──────────────── TODAY’S CELL ──────────────── #}
             {% if day|string == today %}
+
+              {# Already logged – show inline summary + edit button #}
               {% if entry is mapping %}
                 <div class="entry-summary">
                   ✅ {{ entry.duration }} min
                   {% if entry.note %}
                     <div class="entry-note">📝 {{ entry.note }}</div>
                   {% endif %}
-                  <button
-                    class="edit-button"
-                  @click.prevent="
-                    showModal = true;
-                    form.habit = '{{ key }}';
-                    form.label = '{{ label }}';
-                    form.duration = '{{ entry.duration }}';
-                    form.note = `{{ entry.note | e }}`;
-                    form.date = '{{ day|string }}';
-                  "
-                  title="Edit entry"
-                >🖉</button>
+
+                  <button class="edit-button"
+                    @click.prevent="
+                      $root.showModal = true;
+                      $root.form = {
+                        habit: '{{ key }}',
+                        label: '{{ label }}',
+                        duration: '{{ entry.duration }}',
+                        note: `{{ entry.note | e }}`,
+                        date: '{{ day|string }}'
+                      };
+                    "
+                    title="Edit entry"
+                  >🖉</button>
                 </div>
+
+              {# Not logged yet – show “Log” button #}
               {% else %}
-                <button
+                <button class="log-button"
                   @click.prevent="
-                    showModal = true;
-                    form.habit = '{{ key }}';
-                    form.label = '{{ label }}';
-                    form.duration = localStorage.getItem(`${form.habit}_duration`) || {{ info.default_duration }};
-                    form.note = localStorage.getItem(`${form.habit}_note`) || '';
-                    form.date = '{{ day|string }}';
+                    $root.showModal = true;
+                    $root.form = {
+                      habit: '{{ key }}',
+                      label: '{{ label }}',
+                      duration: localStorage.getItem('{{ key }}_duration') || {{ info.default_duration }},
+                      note: localStorage.getItem('{{ key }}_note') || '',
+                      date: '{{ day|string }}'
+                    };
                   "
-                  class="log-button"
                 >Log</button>
               {% endif %}
+
+            {# ──────────────── PAST / FUTURE DAYS ──────────────── #}
             {% else %}
               {% if entry is mapping %}
                 <div class="entry-summary">
@@ -60,6 +73,7 @@
                 –
               {% endif %}
             {% endif %}
+
           </td>
         {% endfor %}
       </tr>
