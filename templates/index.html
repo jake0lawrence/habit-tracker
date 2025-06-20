@@ -3,15 +3,20 @@
 <head>
   <meta charset="utf-8">
   <title>habit-track</title>
+
+  <!-- Core JS -->
   <script src="{{ url_for('static', filename='htmx.min.js') }}"></script>
   <script src="{{ url_for('static', filename='alpine.min.js') }}" defer></script>
+
+  <!-- Styles -->
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 
   {% if config.PWA_ENABLED and 'github.dev' not in request.host %}
+    <!-- PWA hooks (only outside Codespaces) -->
     <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
     <script>
-      if ("serviceWorker" in navigator) {
-        navigator.serviceWorker.register("/static/service-worker.js");
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/static/service-worker.js');
       }
     </script>
   {% endif %}
@@ -19,97 +24,112 @@
   <link rel="icon" type="image/svg+xml" href="/static/icons/icon.svg">
 </head>
 
-<body x-data="{
-  dark: JSON.parse(localStorage.getItem('darkMode') || 'false'),
-  mood: {{ mood or 3 }},
-  moodSaved: false,
-  showModal: false,
-  form: { habit: '', label: '', duration: 15, note: '', date: '' },
-  moodStats: {{ mood_stats | tojson }}
-}"
-  x-init="$watch('dark', val => localStorage.setItem('darkMode', val))"
-  :class="{ 'dark': dark }">
+<!-- ①  Dump JSON safely into a <script> so we avoid quote-escaping hell -->
+<script id="mood-data" type="application/json">{{ mood_stats | tojson }}</script>
 
-  {% if debug %}
+<!-- ②  Alpine root: use single quotes so inner JSON double-quotes stay intact -->
+<body x-data="getAppState()"
+      x-init="$watch('dark', val => localStorage.setItem('darkMode', val))"
+      :class="{ 'dark': dark }">
+
+{% if debug %}
   <div class="debug-banner">
     DEBUG MODE ON | Dark: <span x-text="dark"></span> | PWA: {{ config.PWA_ENABLED }}
   </div>
-  {% endif %}
+{% endif %}
 
-  <header>
-    <h1>🌿 habit-track (Web UI)</h1>
-    <div class="controls">
-      <button @click="dark = !dark" class="theme-toggle" x-text="dark ? '🌗 Light Mode' : '🌑 Dark Mode'"></button>
-      <a href="/export" class="button">📥 Export as CSV</a>
-      <a href="/analytics" class="button">📊 Analytics</a>
-      <a href="/journal-history" class="button">📜 View Past Journals</a>
-      <a href="/settings" class="button">⚙️ Settings</a>
-      <button onclick="window.print()" class="button">🖨️ Print View</button>
-    </div>
-  </header>
-
-  <!-- Summary Tiles -->
-  <section class="summary-tiles">
-    {% for key, info in stats.items() %}
-      <div class="tile">
-        <h3>{{ info.label }}</h3>
-        <p>🔥 Streak: <strong>{{ info.streak }}</strong></p>
-        <p>⏱️ Avg: <strong>{{ info.avg_duration }} min</strong></p>
-      </div>
-    {% endfor %}
-  </section>
-
-  <!-- Weekly Habit Grid -->
-  <section>
-    <h2>🗓️ Weekly Habit Grid</h2>
-    <div id="habit-grid">
-      {% include "_habit_row.html" %}
-    </div>
-  </section>
-
-  <!-- Mood Tracker -->
-  <section class="mood-block">
-    <h2>🧠 Mood Score</h2>
-    <form
-      hx-post="/mood"
-      hx-trigger="change"
-      hx-target="this"
-      hx-swap="none"
-      hx-on="htmx:afterRequest: moodSaved = true; setTimeout(() => moodSaved = false, 1000)"
-    >
-      <input type="range" name="score" min="1" max="5" x-model="mood">
-      <output x-text="mood" style="margin-left: 0.5em;"></output>
-      <span x-show="moodSaved" class="save-indicator" x-transition>✅</span>
-    </form>
-
-    <div class="mood-summary tile">
-      <h3>📋 Mood Summary</h3>
-      <p>7-day Avg: <strong x-text="moodStats.weekly_avg.toFixed(1)"></strong></p>
-      <p>30-day Avg: <strong x-text="moodStats['30d_avg'].toFixed(1)"></strong></p>
-      <p>Overall Avg: <strong x-text="moodStats.overall_avg.toFixed(1)"></strong></p>
-    </div>
-  </section>
-
-  <!-- Modal -->
-  <div class="modal" x-show="showModal" style="display: none;" @keydown.escape.window="showModal = false">
-    <div class="modal-content" @click.outside="showModal = false">
-      <h3 x-text="form.label"></h3>
-      <form :action="`/log/${form.habit}`" method="post" hx-post hx-target="#habit-grid" hx-swap="outerHTML" @submit="
-        localStorage.setItem(`${form.habit}_duration`, form.duration);
-        localStorage.setItem(`${form.habit}_note`, form.note);
-        showModal = false
-      ">
-        <input type="hidden" name="date" :value="form.date">
-        <label>Duration (minutes):</label>
-        <input type="number" name="duration" x-model="form.duration" min="1" required>
-        <label>Note:</label>
-        <input type="text" name="note" x-model="form.note" placeholder="Optional note">
-        <div class="modal-actions">
-          <button type="submit">✅ Save</button>
-          <button type="button" @click="showModal = false">Cancel</button>
-        </div>
-      </form>
-    </div>
+<header>
+  <h1>🌿 habit-track (Web UI)</h1>
+  <div class="controls">
+    <button @click="dark = !dark" class="theme-toggle"
+            x-text="dark ? '🌗 Light Mode' : '🌑 Dark Mode'"></button>
+    <a href="/export"           class="button">📥 Export as CSV</a>
+    <a href="/analytics"        class="button">📊 Analytics</a>
+    <a href="/journal-history"  class="button">📜 View Past Journals</a>
+    <a href="/settings"         class="button">⚙️ Settings</a>
+    <button onclick="window.print()" class="button">🖨️ Print View</button>
   </div>
+</header>
+
+<!-- Summary Tiles -->
+<section class="summary-tiles">
+  {% for key, info in stats.items() %}
+    <div class="tile">
+      <h3>{{ info.label }}</h3>
+      <p>🔥 Streak: <strong>{{ info.streak }}</strong></p>
+      <p>⏱️ Avg: <strong>{{ info.avg_duration }} min</strong></p>
+    </div>
+  {% endfor %}
+</section>
+
+<!-- Weekly Habit Grid -->
+<section>
+  <h2>🗓️ Weekly Habit Grid</h2>
+  <div id="habit-grid">
+    {% include "_habit_row.html" %}
+  </div>
+</section>
+
+<!-- Mood Tracker -->
+<section class="mood-block">
+  <h2>🧠 Mood Score</h2>
+  <form hx-post="/mood"
+        hx-trigger="change"
+        hx-target="this"
+        hx-swap="none"
+        hx-on="htmx:afterRequest: moodSaved = true; setTimeout(() => moodSaved = false, 1000)">
+    <input type="range" name="score" min="1" max="5" x-model="mood">
+    <output x-text="mood" style="margin-left: .5em;"></output>
+    <span x-show="moodSaved" class="save-indicator" x-transition>✅</span>
+  </form>
+
+  <div class="mood-summary tile">
+    <h3>📋 Mood Summary</h3>
+    <p>7-day Avg: <strong x-text="moodStats.weekly_avg.toFixed(1)"></strong></p>
+    <p>30-day Avg: <strong x-text="moodStats['30d_avg'].toFixed(1)"></strong></p>
+    <p>Overall Avg: <strong x-text="moodStats.overall_avg.toFixed(1)"></strong></p>
+  </div>
+</section>
+
+<!-- Modal -->
+<div class="modal" x-show="showModal" style="display: none;" @keydown.escape.window="showModal = false">
+  <div class="modal-content" @click.outside="showModal = false">
+    <h3 x-text="form.label"></h3>
+    <form :action="`/log/${form.habit}`"
+          method="post"
+          hx-post
+          hx-target="#habit-grid"
+          hx-swap="outerHTML"
+          @submit="
+            localStorage.setItem(`${form.habit}_duration`, form.duration);
+            localStorage.setItem(`${form.habit}_note`, form.note);
+            showModal = false">
+      <input type="hidden" name="date" :value="form.date">
+      <label>Duration (minutes):</label>
+      <input type="number" name="duration" x-model="form.duration" min="1" required>
+      <label>Note:</label>
+      <input type="text" name="note" x-model="form.note" placeholder="Optional note">
+      <div class="modal-actions">
+        <button type="submit">✅ Save</button>
+        <button type="button" @click="showModal = false">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Alpine helper that builds the reactive state -->
+<script>
+  function getAppState () {
+    return {
+      dark: JSON.parse(localStorage.getItem('darkMode') || 'false'),
+      mood: {{ mood or 3 }},
+      moodSaved: false,
+      showModal: false,
+      form: { habit: '', label: '', duration: 15, note: '', date: '' },
+      moodStats: JSON.parse(document.getElementById('mood-data').textContent)
+    }
+  }
+</script>
+
 </body>
 </html>
