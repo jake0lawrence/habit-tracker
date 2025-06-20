@@ -33,8 +33,8 @@
                 <button
                   class="edit-button"
                   @click.prevent="
-                    $root.showModal = true;
-                    $root.form = {
+                    showModal = true;
+                    form = {
                       habit:    '{{ key }}',
                       label:    '{{ label }}',
                       duration: {{ entry.duration }},
@@ -50,8 +50,8 @@
               <button
                 class="log-button"
                 @click.prevent="
-                  $root.showModal = true;
-                  $root.form = {
+                  showModal = true;
+                  form = {
                     habit:    '{{ key }}',
                     label:    '{{ label }}',
                     duration: parseInt(localStorage.getItem('{{ key }}_duration')) || {{ info.default_duration }},
