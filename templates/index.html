@@ -97,7 +97,7 @@
     <h3 x-text="form.label"></h3>
     <form :action="`/log/${form.habit}`"
           method="post"
-          hx-post
+          :hx-post="`/log/${form.habit}`"     <!-- ★ HTMX now posts to the right URL -->
           hx-target="#habit-grid"
           hx-swap="outerHTML"
           @submit="
