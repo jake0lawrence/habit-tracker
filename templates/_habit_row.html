@@ -33,13 +33,13 @@
                 <button
                   class="edit-button"
                   @click.prevent="
-                    $root.showModal = true;
-                    $root.form = {
-                      habit    : '{{ key }}',
-                      label    : '{{ label }}',
-                      duration : '{{ entry.duration }}',
-                      note     : `{{ entry.note | e }}`,
-                      date     : '{{ day|string }}'
+                    showModal = true;
+                    form = {
+                      habit:    '{{ key }}',
+                      label:    '{{ label }}',
+                      duration: '{{ entry.duration }}',
+                      note:     `{{ entry.note | e }}`,
+                      date:     '{{ day|string }}'
                     };
                   "
                   title="Edit entry"
@@ -50,13 +50,13 @@
               <button
                 class="log-button"
                 @click.prevent="
-                  $root.showModal = true;
-                  $root.form = {
-                    habit    : '{{ key }}',
-                    label    : '{{ label }}',
-                    duration : localStorage.getItem('{{ key }}_duration') || {{ info.default_duration }},
-                    note     : localStorage.getItem('{{ key }}_note')      || '',
-                    date     : '{{ day|string }}'
+                  showModal = true;
+                  form = {
+                    habit:    '{{ key }}',
+                    label:    '{{ label }}',
+                    duration: localStorage.getItem('{{ key }}_duration') || {{ info.default_duration }},
+                    note:     localStorage.getItem('{{ key }}_note')      || '',
+                    date:     '{{ day|string }}'
                   };
                 "
               >Log</button>
