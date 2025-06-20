@@ -1,112 +1,144 @@
-# 🧠 Design Notes — `habit-track-cli`
+# 🧠 Architecture Notes — `Habit Tracker`
 
-## Overview
-
-This is a lightweight, ADHD-friendly habit and mood tracker designed to be fast, local-first, and friction-free. The project emphasizes a simple CLI interface with a focus on behavioral reinforcement and mental wellness.
+_Last updated 20 Jun 2025_
 
 ---
 
-## Core Goals
+## 1 · High-Level Overview
 
-- 🧘‍♂️ Make habit logging take < 15 seconds  
-- 🧠 Build consistent self-reflection loops  
-- 💾 Own your data locally (no cloud needed)  
-- 🧰 Keep the stack tiny, extensible, and Copilot/Codex-friendly  
+Habit-Track is a lightweight, ADHD-friendly habit & mood tracker that runs **locally by default** yet can be deployed as a PWA.  
+The stack is intentionally minimal:
 
----
+Flask → Jinja2 → htmx → Alpine.js → vanilla CSS
+SQLite | Postgres
 
-## Current Tech Stack
-
-| Layer              | Technology                                                |
-|--------------------|-----------------------------------------------------------|
-| CLI Framework      | [Typer](https://typer.tiangolo.com/)                      |
-| UI Rendering       | [Rich](https://rich.readthedocs.io/)                      |
-| Data Storage       | Flat JSON file (`~/.habit_log.json`)                      |
-| Charts (Planned)   | [`plotext`](https://github.com/piccolomo/plotext)         |
-| Notification       | OS-level (`osascript`, `notify-send`, PowerShell)         |
-| Future Storage     | SQLite via [`dataset`](https://github.com/pudo/dataset)   |
+All UI interactions happen on a single page (`/`) where htmx swaps the weekly-grid
+fragment without reloading the rest of the DOM.
 
 ---
 
-## Habit Data Schema (JSON)
+## 2 · Core Design Goals
 
-```json
-{
-  "2025-06-18": {
-    "med": 5,
-    "grat": 1,
-    "mood": 4
-  }
-}
-````
-
-**Schema Notes**
-
-* Keys are stringified dates (`YYYY-MM-DD`)
-* Each habit is tracked by its shorthand key (`med`, `grat`, etc.)
-* Mood is stored as a 1–5 numeric value
+| ID | Goal | Success signal |
+|----|------|----------------|
+| G-1 | **Log a habit in < 10 s** | One click/tap + Save |
+| G-2 | **Zero vendor lock-in** | Data stored as JSON/SQLite you can export any time |
+| G-3 | **Never lose a log** | LocalStorage + DB double-write; PWA works offline |
+| G-4 | **Bullet-proof “Save”** | Static `/log` endpoint + unit + e2e tests |
+| G-5 | **Extensible** | New habits are declared in `config.json`; no code mods |
 
 ---
 
-## Command Structure
+## 3 · Updated Tech Stack
 
-| Command                 | Description                    |
-| ----------------------- | ------------------------------ |
-| `log <habit> [min]`     | Mark a habit as completed      |
-| `mood <score>`          | Record your current mood (1–5) |
-| `show`                  | Display the weekly grid        |
-| `remind` *(planned)*    | Push a desktop notification    |
-| `chart` *(planned)*     | Show weekly mood chart         |
-| `dashboard` *(planned)* | Interactive TUI live dashboard |
-
----
-
-## Roadmap
-
-### ✅ v0.2 (MVP Enhancements)
-
-* [ ] SQLite backend with auto-migration
-* [ ] Desktop notification support
-* [ ] Basic test suite scaffold (CI-ready)
-
-### 🚧 v0.3
-
-* [ ] Mood trend chart
-* [ ] Weekly HTML report generator
-* [ ] Rich TUI dashboard
-
-### 🎯 v1.0
-
-* [ ] PyPI packaging and `pipx` support
-* [ ] One-file Windows/Mac installer (PyInstaller)
-* [ ] Final polish + demo GIF
-For a detailed list of ongoing tasks, see [tasks.md](tasks.md).
+| Layer              | Technology                                        | Rationale |
+|--------------------|---------------------------------------------------|-----------|
+| Backend            | **Flask 2**                                       | Simple routing & Jinja |
+| Server-side Templ. | **Jinja2**                                        | Zero JS build step |
+| Frontend runtime   | **htmx 1.9** + **Alpine 3.13**                    | 6 kB each, declarative |
+| Styling            | Vanilla CSS                                       | Dark-mode via class toggle |
+| Persistent store   | JSON (dev) → SQLite or Postgres (prod)            | Local first, cloud optional |
+| PWA                | Workbox-generated service worker                  | Offline caching |
+| Tests              | **Pytest** (unit) • **Playwright** (e2e)          | CI-grade coverage |
+| Optional CLI       | Typer + Rich (legacy)                             | Maintained for power users |
 
 ---
 
-## Contributing
+## 4 · Data Model
 
-1. Fork and clone this repo
-2. Create a virtual environment
-3. Install dependencies with:
+### 4.1 Habit Log Table (SQL schema)
 
-   ```bash
-   pip install -r requirements.txt
-   ```
-4. Run `habit.py show` to confirm everything works
-5. Make your changes
-6. Open a Pull Request! 🚀
+| Column | Type | Notes |
+|--------|------|-------|
+| `date` | `DATE` (PK1) | `YYYY-MM-DD` |
+| `habit` | `TEXT` (PK2) | Habit key (`Meditation`, etc.) |
+| `duration` | `INTEGER` | Minutes |
+| `note` | `TEXT` | Optional |
+| `ts` | `TIMESTAMP` | Server time inserted |
+
+### 4.2 Mood Table
+
+| Column | Type |
+|--------|------|
+| `date` | `DATE` (PK) |
+| `score` | `INTEGER` (1-5) |
+| `ts` | `TIMESTAMP` |
+
+*(JSON dev mode mirrors the same structure in a nested dict.)*
 
 ---
 
-## Licensing
+## 5 · Request Flow
 
-MIT — see [LICENSE](../LICENSE) for details.
+```mermaid
+sequenceDiagram
+  participant U as User (browser)
+  participant A as Alpine
+  participant H as htmx
+  participant F as Flask
+  participant DB as SQLite / Postgres
+
+  U->>A: Click “Log”
+  A->>A: showModal = true<br/>populate form
+  U->>H: Click “Save”
+  H->>F: POST /log (habit, duration, note, date)
+  F->>DB: insert / update
+  F-->>H: 200 + #habit-grid HTML
+  H->>U: swap grid
+  A->>LS: cache duration & note
+```
 
 ---
 
-## Author
+### Why a **static `/log`** endpoint matters  
+* Because the URL never changes, htmx attaches its AJAX handler once at page-load—no race conditions when Alpine later mutates attributes.*
 
-**Jake Lawrence**
-📫 [jakelawrence.io](https://jakelawrence.io)
-🧠 Building tools for calm + clarity
+---
+
+## 6 · Component Map
+
+| File / Path | Role |
+|-------------|------|
+| `app.py` | Flask factory&nbsp;+ routes (`/`, `/log`, `/mood`, `/settings`, …) |
+| `templates/index.html` | Main UI shell (summary tiles, grid, modal) |
+| `templates/_habit_row.html` | Partial that renders the weekly grid rows |
+| `static/htmx.min.js`, `static/alpine.min.js` | Front-end micro-libs |
+| `static/service-worker.js` | Workbox build output (PWA) |
+| `storage.py` | DB or JSON adapter (`save`, `delete`, `get_range`) |
+| `tests/` | Pytest unit specs |
+| `e2e/` | Playwright tests (`log-save.spec.ts`) |
+
+---
+
+## 7 · CLI vs Web Feature Matrix
+
+| Capability | Web UI | CLI (`habit.py`) |
+|------------|--------|------------------|
+| Log habit  | ✅ | ✅ `log <key> <min>` |
+| Log mood   | ✅ | ✅ `mood <score>` |
+| Weekly view| ✅ (grid) | ✅ `show` |
+| Settings   | ✅ (form) | 🚧 (edit JSON manually) |
+| Export CSV | ✅ `/export` | ❌ (planned) |
+
+---
+
+## 8 · Test Strategy
+
+| Level | Tool | Key assertions |
+|-------|------|----------------|
+| **Unit** | Pytest | `/log` returns **200** and row HTML contains habit key |
+| **E2E**  | Playwright | “Log → Save” shows ✅ *N* min, persists after reload |
+| **CI**   | GitHub Actions | Runs both suites on every push / PR |
+
+> **Dependency-drift guard:** Pin **Click 8.1.x** *or* upgrade **Typer ≥ 0.12**
+
+
+### Highlights of what changed
+
+| Old doc | New reality |
+|---------|-------------|
+| Typer + Rich as the primary UI | Flask + htmx + Alpine take center stage; CLI is optional |
+| Flat JSON only | Dev: JSON; Prod: SQLite/Postgres |
+| Future “chart” command | Now `/analytics` route (browser) |
+| Roadmap items updated | Reflect PWA, notifications, analytics |
+| Added detailed request flow, component map, test stack | Clarifies static `/log` architecture |
