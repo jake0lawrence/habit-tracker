@@ -248,6 +248,35 @@ body.dark .chart-block {
   color: #eee;
 }
 
+/* ───────── Toast Notifications ───────── */
+.toast {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  background: #4caf50;            /* success green   */
+  color: #fff;
+  padding: 0.9em 1.4em;
+  font-weight: 500;
+  border-radius: 8px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.35);
+  opacity: 0;
+  transform: translateY(30px);
+  pointer-events: none;
+  z-index: 2000;
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+.toast.error { background: #e53935; }              /* red error */
+.toast.show  { opacity: 1; transform: translateY(0); }
+
+body.dark .toast         { background: #388e3c; }
+body.dark .toast.error   { background: #c62828; }
+
+/* Slide-in keyframes (optional for browsers preferring keyframes) */
+@keyframes toast-slide {
+  from { opacity: 0; transform: translateY(30px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+
 /* Print Styling */
 @media print {
   .controls, .theme-toggle, .modal, .summary-tiles {
