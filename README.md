@@ -14,6 +14,7 @@ Log habits & moods in seconds, jot AI-seeded journal entries, and review analyti
 |----------|---------|---------|
 | **Habits** | Modal logging | “Log / Edit” auto-prefilled from `localStorage`. |
 | | Static `/log` endpoint | Eliminates Alpine/htmx timing bugs. |
+| Error alerts | Failed saves trigger a visible htmx alert. |
 | **Mood** | 1–5 slider | Instant ✅ indicator, rolling averages in summary tiles. |
 | **Journal** | OpenAI prompt *(opt-in)* | Generates a reflective writing prompt based on today’s mood & streaks. |
 | | `/journal-entry` save | Saves entry to DB/JSON; auto-redirects to “Journal History”. |
