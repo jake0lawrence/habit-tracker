@@ -29,7 +29,8 @@ def read_json(path: Path):
 def test_post_log_route(tmp_path):
     client, orig_data, orig_config = make_client(tmp_path)
     try:
-        resp = client.post("/log/med", data={"duration": "15", "note": "test"})
+        today = datetime.date.today().isoformat()
+        resp = client.post("/log", data={"habit":"med", "duration": "15", "note": "test", "date": today})
         assert resp.status_code == 200
         assert "<table" in resp.get_data(as_text=True)
         data = read_json(flask_app_module.DATA_FILE)
@@ -45,8 +46,8 @@ def test_post_log_custom_date(tmp_path):
     try:
         custom_date = (datetime.date.today() - datetime.timedelta(days=1)).isoformat()
         resp = client.post(
-            "/log/med",
-            data={"duration": "20", "note": "yesterday", "date": custom_date},
+            "/log",
+            data={"habit":"med", "duration": "20", "note": "yesterday", "date": custom_date},
         )
         assert resp.status_code == 200
         data = read_json(flask_app_module.DATA_FILE)
