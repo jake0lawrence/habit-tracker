@@ -89,10 +89,11 @@ Need one-click? See `/docs/deploy-render.md`.
 
 ## 🔬 More Docs
 
-* **docs/architecture.md** – data model, request flow, PWA notes
-* **docs/tasks.md** – open roadmap with emoji effort tags
-* **tests/** – Pytest & Playwright specs
-* **ci.yml** – full CI pipeline
+* **[docs/architecture.md](docs/architecture.md)** — data model, request flow, PWA notes  
+* **[docs/tasks.md](docs/tasks.md)** — open roadmap with emoji effort tags  
+* **[docs/deploy-render.md](docs/deploy-render.md)** — one-click & manual deploy steps for Render  
+* **[tests/](tests/)** — Pytest & Playwright specs  
+* **[.github/workflows/ci.yml](.github/workflows/ci.yml)** — full CI pipeline
 
 ---
 
