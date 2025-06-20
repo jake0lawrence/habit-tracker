@@ -3,15 +3,21 @@
 <head>
   <meta charset="utf-8">
   <title>📊 Analytics – habit-track</title>
+
+  <!-- JS -->
   <script src="{{ url_for('static', filename='chart.min.js') }}"></script>
   <script src="{{ url_for('static', filename='alpine.min.js') }}" defer></script>
+
+  <!-- CSS -->
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 
   {% if config.PWA_ENABLED %}
     <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
     <script>
-      if ("serviceWorker" in navigator) {
-        navigator.serviceWorker.register("/static/service-worker.js");
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register(
+          "{{ url_for('static', filename='service-worker.js') }}"
+        );
       }
     </script>
   {% endif %}
@@ -20,8 +26,8 @@
 </head>
 
 <body x-data="{ dark: JSON.parse(localStorage.getItem('darkMode') || 'false') }"
-      x-init="$watch('dark', val => localStorage.setItem('darkMode', val))"
-      :class="{ 'dark': dark }">
+      x-init="$watch('dark', v => localStorage.setItem('darkMode', v))"
+      :class="{ dark }">
 
   {% if debug %}
   <div class="debug-banner">
@@ -33,7 +39,9 @@
     <h1>📈 Analytics</h1>
     <div class="controls">
       <a href="/" class="button">← Back</a>
-      <button @click="dark = !dark" class="theme-toggle" x-text="dark ? '🌗 Light Mode' : '🌑 Dark Mode'"></button>
+      <button class="theme-toggle"
+              @click="dark = !dark"
+              x-text="dark ? '🌗 Light Mode' : '🌑 Dark Mode'"></button>
     </div>
   </header>
 
@@ -43,7 +51,7 @@
         <h3>{{ chart.label }}</h3>
         <canvas id="chart-{{ loop.index }}"></canvas>
         <script>
-          new Chart(document.getElementById("chart-{{ loop.index }}"), {
+          new Chart(document.getElementById('chart-{{ loop.index }}'), {
             type: 'bar',
             data: {
               labels: {{ labels | tojson }},
@@ -59,9 +67,7 @@
                 legend: { display: false },
                 tooltip: {
                   callbacks: {
-                    label: function(ctx) {
-                      return `Duration: ${ctx.raw} min`;
-                    }
+                    label: ctx => `Duration: ${ctx.raw} min`
                   }
                 }
               },
@@ -81,7 +87,7 @@
       <h3>🧠 Mood Score</h3>
       <canvas id="mood-chart"></canvas>
       <script>
-        new Chart(document.getElementById("mood-chart"), {
+        new Chart(document.getElementById('mood-chart'), {
           type: 'line',
           data: {
             labels: {{ mood_series | map(attribute='date') | list | tojson }},
@@ -96,7 +102,7 @@
           options: {
             responsive: true,
             scales: {
-              y: { min: 0, max: 5, title: { display: true, text: 'Score (1\u20135)' } }
+              y: { min: 0, max: 5, title: { display: true, text: 'Score (1–5)' } }
             }
           }
         });
