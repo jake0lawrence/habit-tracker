@@ -1,18 +1,40 @@
 <!doctype html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <title>🧠 AI Journal – habit-track</title>
+
+  <!-- CSS -->
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+
+  <!-- Optional: service-worker if PWA is on -->
+  {% if config.PWA_ENABLED and 'github.dev' not in request.host %}
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    <script>
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register(
+          "{{ url_for('static', filename='service-worker.js') }}"
+        );
+      }
+    </script>
+  {% endif %}
+
+  <link rel="icon" type="image/svg+xml" href="/static/icons/icon.svg">
 </head>
+
 <body>
   <header><h1>🧠 Mood Journal</h1></header>
+
   <pre style="white-space: pre-wrap;">{{ prompt }}</pre>
 
   <form method="POST" action="/journal-entry">
-    <textarea name="entry" rows="10" style="width: 100%;" placeholder="Write your thoughts..."></textarea>
+    <textarea name="entry"
+              rows="10"
+              style="width:100%;"
+              placeholder="Write your thoughts..."></textarea>
     <button type="submit" class="button">💾 Save Entry</button>
   </form>
+
   <p>
     <a href="/download-journal?format=txt" class="button">📄 Download .txt</a>
     <a href="/download-journal?format=zip" class="button">🗜️ Download .zip</a>
