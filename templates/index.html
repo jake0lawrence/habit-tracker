@@ -128,7 +128,7 @@
   function getAppState () {
     return {
       // reactive state
-      dark      : JSON.parse(localStorage.getItem('darkMode') || 'false'),
+      dark      : JSON.parse(localStorage.getItem('darkMode') || 'true'),
       mood      : {{ mood or 3 }},
       moodSaved : false,
       showModal : false,
