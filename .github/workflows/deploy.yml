@@ -2,35 +2,50 @@ name: Deploy to Droplet
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main ]          # change if your default branch differs
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     env:
-      USER: root                 # SSH user
-      SERVICE_USER: www-data     # user defined in habit.service
+      USER: root                # SSH user on droplet
+      SERVICE_USER: www-data    # user defined in habit.service
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+    # 1️⃣ Checkout repo
+    - uses: actions/checkout@v4
 
+    # 2️⃣ Add SSH key
     - name: Set up SSH key
       uses: webfactory/ssh-agent@v0.8.0
       with:
         ssh-private-key: ${{ secrets.DEPLOY_KEY }}
 
+    # 3️⃣ Trust droplet host key
     - name: Add droplet to known_hosts
       run: |
         mkdir -p ~/.ssh
         ssh-keyscan -H ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts
 
-    - name: Sync repo to droplet
+    # 4️⃣ Clean & reset repo **on droplet** so it always matches GitHub
+    - name: Reset repo on droplet
+      run: |
+        ssh ${{ env.USER }}@${{ secrets.DEPLOY_HOST }} "\
+          cd ${DEPLOY_PATH} && \
+          git fetch origin && \
+          git reset --hard origin/main && \
+          git clean -fd"
+      env:
+        DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+
+    # 5️⃣ Sync latest commit via rsync
+    - name: Copy project to droplet
       run: |
         rsync -az --delete \
           --exclude '.git' \
           ./ ${{ env.USER }}@${{ secrets.DEPLOY_HOST }}:${{ secrets.DEPLOY_PATH }}
 
+    # 6️⃣ Re-create venv, install deps, ensure ownership
     - name: Build venv & install deps
       run: |
         ssh ${{ env.USER }}@${{ secrets.DEPLOY_HOST }} "\
@@ -38,13 +53,14 @@ jobs:
           cd ${DEPLOY_PATH}; \
           if [ ! -d venv ]; then python3 -m venv venv; fi; \
           source venv/bin/activate; \
-          pip install --quiet --upgrade pip; \
-          pip install --quiet --upgrade -r requirements.txt || true; \
-          pip install --quiet --upgrade gunicorn; \
+          pip install -q --upgrade pip; \
+          pip install -q --upgrade -r requirements.txt; \
+          pip install -q --upgrade gunicorn; \
           chown -R ${SERVICE_USER}:${SERVICE_USER} ${DEPLOY_PATH}"
       env:
         DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
 
+    # 7️⃣ Restart the systemd service
     - name: Restart habit service
       run: |
         ssh ${{ env.USER }}@${{ secrets.DEPLOY_HOST }} "\
