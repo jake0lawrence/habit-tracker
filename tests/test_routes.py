@@ -83,6 +83,24 @@ def test_log_mood(tmp_path):
         restore(orig_data, orig_config)
 
 
+def test_mood_missing_score(tmp_path):
+    client, orig_data, orig_config = make_client(tmp_path)
+    try:
+        res = client.post("/mood", data={})
+        assert res.status_code == 400
+    finally:
+        restore(orig_data, orig_config)
+
+
+def test_mood_out_of_range(tmp_path):
+    client, orig_data, orig_config = make_client(tmp_path)
+    try:
+        res = client.post("/mood", data={"score": "10"})
+        assert res.status_code == 400
+    finally:
+        restore(orig_data, orig_config)
+
+
 def test_homepage(tmp_path):
     client, orig_data, orig_config = make_client(tmp_path)
     try:
