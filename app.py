@@ -8,22 +8,15 @@ import openai
 
 app = Flask(__name__)
 
+# Application mode: 'prod', 'dev', or 'test'.
+APP_MODE = os.getenv("APP_MODE", "prod")
+if APP_MODE == "prod":
+    app.config.from_object(ProdConfig)
+else:
+    app.config.from_object(DevConfig)
 
-def create_app(mode=None):
-    """Configure the global Flask app based on APP_MODE."""
-    if mode is None:
-        mode = os.getenv("APP_MODE", "prod")
-    if mode == "prod":
-        app.config.from_object(ProdConfig)
-    else:
-        app.config.from_object(DevConfig)
-    app.config["APP_MODE"] = mode
-    app.config["PWA_ENABLED"] = mode == "prod"
-    return app
-
-
-# Apply configuration at import so gunicorn sees the correct settings.
-create_app()
+app.config["APP_MODE"] = APP_MODE
+app.config["PWA_ENABLED"] = APP_MODE == "prod"
 
 DATA_FILE = Path.home() / ".habit_log.json"
 CONFIG_FILE = Path.home() / ".habit_config.json"
@@ -218,18 +211,10 @@ def index():
 
 @app.post("/log")
 def log_habit():
-    habit = request.form.get("habit")
-    duration_str = request.form.get("duration")
+    habit = request.form["habit"]
+    duration = int(request.form["duration"])
     note = request.form.get("note", "").strip()
-    target_date = request.form.get("date")
-
-    if not habit or not duration_str or not target_date:
-        return {"error": "Missing habit, duration, or date"}, 400
-
-    if not str(duration_str).isdigit():
-        return {"error": "Duration must be a number"}, 400
-
-    duration = int(duration_str)
+    target_date = request.form["date"]
 
     backend = get_storage_backend()
     if request.args.get("delete") == "1":
@@ -252,15 +237,7 @@ def log_habit():
 
 @app.route("/mood", methods=["POST"])
 def log_mood():
-    score_str = request.form.get("score")
-    if score_str is None:
-        return {"status": "error", "message": "score required"}, 400
-    try:
-        score = int(score_str)
-    except (TypeError, ValueError):
-        return {"status": "error", "message": "invalid score"}, 400
-    if not 1 <= score <= 5:
-        return {"status": "error", "message": "invalid score"}, 400
+    score = int(request.form["score"])
     backend = get_storage_backend()
     today = str(datetime.date.today())
     backend.save_mood(today, score)
@@ -422,10 +399,16 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    create_app(args.mode)
+    if args.mode == "prod":
+        app.config.from_object(ProdConfig)
+    else:
+        app.config.from_object(DevConfig)
 
     env_debug = os.getenv("DEBUG", "").lower() in {"1", "true", "yes"}
     debug = args.debug or env_debug or app.config.get("DEBUG", False)
+
+    app.config["APP_MODE"] = args.mode
+    app.config["PWA_ENABLED"] = args.mode == "prod"
 
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=debug)
