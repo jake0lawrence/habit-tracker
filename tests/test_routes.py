@@ -101,6 +101,24 @@ def test_mood_out_of_range(tmp_path):
         restore(orig_data, orig_config)
 
 
+def test_mood_invalid_type(tmp_path):
+    client, orig_data, orig_config = make_client(tmp_path)
+    try:
+        res = client.post("/mood", data={"score": "abc"})
+        assert res.status_code == 400
+    finally:
+        restore(orig_data, orig_config)
+
+
+def test_mood_float_value(tmp_path):
+    client, orig_data, orig_config = make_client(tmp_path)
+    try:
+        res = client.post("/mood", data={"score": "3.5"})
+        assert res.status_code == 400
+    finally:
+        restore(orig_data, orig_config)
+
+
 def test_homepage(tmp_path):
     client, orig_data, orig_config = make_client(tmp_path)
     try:
