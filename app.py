@@ -7,12 +7,23 @@ import storage
 import openai
 
 app = Flask(__name__)
-app.config.from_object(DevConfig)
 
-# Application mode: 'prod', 'dev', or 'test'.
-APP_MODE = os.getenv("APP_MODE", "prod")
-app.config["APP_MODE"] = APP_MODE
-app.config["PWA_ENABLED"] = APP_MODE == "prod"
+
+def create_app(mode=None):
+    """Configure the global Flask app based on APP_MODE."""
+    if mode is None:
+        mode = os.getenv("APP_MODE", "prod")
+    if mode == "prod":
+        app.config.from_object(ProdConfig)
+    else:
+        app.config.from_object(DevConfig)
+    app.config["APP_MODE"] = mode
+    app.config["PWA_ENABLED"] = mode == "prod"
+    return app
+
+
+# Apply configuration at import so gunicorn sees the correct settings.
+create_app()
 
 DATA_FILE = Path.home() / ".habit_log.json"
 CONFIG_FILE = Path.home() / ".habit_config.json"
@@ -403,14 +414,10 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    if args.mode == "prod":
-        app.config.from_object(ProdConfig)
+    create_app(args.mode)
 
     env_debug = os.getenv("DEBUG", "").lower() in {"1", "true", "yes"}
     debug = args.debug or env_debug or app.config.get("DEBUG", False)
-
-    app.config["APP_MODE"] = args.mode
-    app.config["PWA_ENABLED"] = args.mode == "prod"
 
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=debug)

@@ -53,8 +53,10 @@ python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 # ⬇️ Optional: enable AI journal prompts
 export OPENAI_API_KEY=sk-********************************
+# Choose config via APP_MODE (dev | prod)
+export APP_MODE=dev
 
-python app.py   # auto-reload + debug if FLASK_DEBUG=1
+python app.py   # auto-reload in dev mode
 ````
 
 Open [http://localhost:5000](http://localhost:5000) & start tracking.
@@ -81,7 +83,7 @@ npm ci && npx playwright test # E2E smoke
 Start command:
 
 ```bash
-gunicorn app:app --bind 0.0.0.0:$PORT
+APP_MODE=prod gunicorn app:app --bind 0.0.0.0:$PORT
 ```
 
 Need one-click? See `/docs/deploy-render.md`.
