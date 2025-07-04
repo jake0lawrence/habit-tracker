@@ -1,6 +1,6 @@
 name: Deploy to Droplet
 
-# ▶ Trigger on every push (or PR merge) to main
+# Trigger every push to main (adjust branch if needed)
 on:
   push:
     branches: [ main ]
@@ -10,24 +10,30 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    # 1️⃣ Check out the repo
-    - name: Checkout code
+    # 1️⃣ Check out the code
+    - name: Checkout repository
       uses: actions/checkout@v4
 
-    # 2️⃣ Start an SSH agent with the DEPLOY_KEY secret
+    # 2️⃣ Start an SSH agent with the private deploy key
     - name: Set up SSH key
       uses: webfactory/ssh-agent@v0.8.0
       with:
         ssh-private-key: ${{ secrets.DEPLOY_KEY }}
 
-    # 3️⃣ Sync files to the droplet via rsync
+    # 3️⃣ Add droplet host key to known_hosts (prevents “Host key verification failed”)
+    - name: Add droplet to known_hosts
+      run: |
+        mkdir -p ~/.ssh
+        ssh-keyscan -H ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts
+
+    # 4️⃣ Sync project files to the droplet via rsync
     - name: Copy project to droplet
       run: |
         rsync -az --delete \
           --exclude '.git' \
           ./ ${{ secrets.DEPLOY_HOST }}:${{ secrets.DEPLOY_PATH }}
 
-    # 4️⃣ Install/upgrade Python packages if requirements.txt changed
+    # 5️⃣ Install / update Python dependencies on the droplet
     - name: Install dependencies on droplet
       run: |
         ssh ${{ secrets.DEPLOY_HOST }} "\
@@ -36,7 +42,7 @@ jobs:
       env:
         DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
 
-    # 5️⃣ Restart the habit systemd service
+    # 6️⃣ Restart the habit systemd service
     - name: Restart habit service
       run: |
         ssh ${{ secrets.DEPLOY_HOST }} "sudo systemctl restart habit && sudo systemctl status habit --no-pager"
