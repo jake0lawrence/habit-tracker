@@ -35,15 +35,10 @@
   </div>
   {% endif %}
 
-  <header>
-    <h1>📈 Analytics</h1>
-    <div class="controls">
-      <a href="/" class="button">← Back</a>
-      <button class="theme-toggle"
-              @click="dark = !dark"
-              x-text="dark ? '🌗 Light Mode' : '🌑 Dark Mode'"></button>
-    </div>
-  </header>
+  {% set header_title = '📈 Analytics' %}
+  {% set back_url = '/' %}
+  {% set show_theme_toggle = True %}
+  {% include '_header.html' %}
 
   <section>
     {% for chart in chart_data %}

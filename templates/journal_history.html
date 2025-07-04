@@ -22,10 +22,10 @@
 </head>
 
 <body>
-  <header>
-    <h1>📜 Journal History</h1>
-    <p><a href="/" class="button">← Back to Dashboard</a></p>
-  </header>
+  {% set header_title = '📜 Journal History' %}
+  {% set back_url = '/' %}
+  {% set back_label = '← Back to Dashboard' %}
+  {% include '_header.html' %}
 
   {% if entries %}
     {% for entry in entries %}

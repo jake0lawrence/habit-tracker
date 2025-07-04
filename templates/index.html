@@ -37,19 +37,14 @@
   </div>
 {% endif %}
 
-<header>
-  <h1>🤖 Habit Tracker</h1>
-  <div class="controls">
-    <button class="theme-toggle"
-            @click="dark = !dark"
-            x-text="dark ? '🌗 Light Mode' : '🌑 Dark Mode'"></button>
-    <a href="/export"          class="button">📥 Export as CSV</a>
-    <a href="/analytics"       class="button">📊 Analytics</a>
-    <a href="/journal-history" class="button">📜 View Past Journals</a>
-    <a href="/settings"        class="button">⚙️ Settings</a>
-    <button class="button" onclick="window.print()">🖨️ Print View</button>
-  </div>
-</header>
+{% set header_title = '🤖 Habit Tracker' %}
+{% set show_theme_toggle = True %}
+{% set show_export = True %}
+{% set show_analytics = True %}
+{% set show_journal_history = True %}
+{% set show_settings = True %}
+{% set show_print = True %}
+{% include '_header.html' %}
 
 <section class="summary-tiles">
 {% for key, info in stats.items() %}
