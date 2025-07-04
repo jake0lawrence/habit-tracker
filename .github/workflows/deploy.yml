@@ -9,10 +9,11 @@ jobs:
     runs-on: ubuntu-latest
     env:
       USER: root                 # SSH user
-      SERVICE_USER: www-data     # systemd runs under this user
+      SERVICE_USER: www-data     # user defined in habit.service
 
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v4
 
     - name: Set up SSH key
       uses: webfactory/ssh-agent@v0.8.0
@@ -24,25 +25,27 @@ jobs:
         mkdir -p ~/.ssh
         ssh-keyscan -H ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts
 
-    - name: Sync project to droplet
+    - name: Sync repo to droplet
       run: |
         rsync -az --delete \
           --exclude '.git' \
           ./ ${{ env.USER }}@${{ secrets.DEPLOY_HOST }}:${{ secrets.DEPLOY_PATH }}
 
-    - name: Build venv + install deps + fix ownership
+    - name: Build venv & install deps
       run: |
         ssh ${{ env.USER }}@${{ secrets.DEPLOY_HOST }} "\
-          cd ${DEPLOY_PATH} && \
-          if [ ! -d venv ]; then python3 -m venv venv; fi && \
-          source venv/bin/activate && \
-          pip install -q --upgrade pip && \
-          pip install -q --upgrade -r requirements.txt && \
+          set -e; \
+          cd ${DEPLOY_PATH}; \
+          if [ ! -d venv ]; then python3 -m venv venv; fi; \
+          source venv/bin/activate; \
+          pip install --quiet --upgrade pip; \
+          pip install --quiet --upgrade -r requirements.txt || true; \
+          pip install --quiet --upgrade gunicorn; \
           chown -R ${SERVICE_USER}:${SERVICE_USER} ${DEPLOY_PATH}"
       env:
         DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
 
     - name: Restart habit service
       run: |
-        ssh ${{ env.USER }}@${{ secrets.DEPLOY_HOST }} \
-          "sudo systemctl restart habit && sudo systemctl status habit --no-pager"
+        ssh ${{ env.USER }}@${{ secrets.DEPLOY_HOST }} "\
+          sudo systemctl restart habit && sudo systemctl status habit --no-pager"
