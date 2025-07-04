@@ -223,13 +223,16 @@ def log_habit():
     note = request.form.get("note", "").strip()
     target_date = request.form.get("date")
 
-    if not habit or not duration_str or not target_date:
-        return {"error": "Missing habit, duration, or date"}, 400
+    if not habit or not target_date:
+        return {"error": "Missing habit or date"}, 400
 
-    if not str(duration_str).isdigit():
+    if duration_str is None or str(duration_str).strip() == "":
+        return {"error": "Duration required"}, 400
+
+    try:
+        duration = int(duration_str)
+    except (TypeError, ValueError):
         return {"error": "Duration must be a number"}, 400
-
-    duration = int(duration_str)
 
     backend = get_storage_backend()
     if request.args.get("delete") == "1":
