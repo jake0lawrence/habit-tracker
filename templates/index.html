@@ -124,6 +124,7 @@
   <script>
     /* Success toast after habit grid swap */
     htmx.on('htmx:afterSwap', e => {
+      if (!e.detail || !e.detail.target) return;
       if (e.detail.target.id === 'habit-grid') {
         document.body.__x.$data.showToast('Saved ✔️');
       }
