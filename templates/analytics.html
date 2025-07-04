@@ -6,16 +6,13 @@
   <script src="{{ url_for('static', filename='chart.min.js') }}"></script>
 {% endblock %}
 
+{# ───── Header config for the partial ───── #}
+{% set header_title = '📈 Analytics' %}
+{% set back_url = url_for('index') %}
+{% set show_theme_toggle = True %}
+
 {% block content %}
-  <header>
-    <h1>📈 Analytics</h1>
-    <div class="controls">
-      <a href="/" class="button">← Back</a>
-      <button class="theme-toggle"
-              @click="dark = !dark"
-              x-text="dark ? '🌗 Light Mode' : '🌑 Dark Mode'"></button>
-    </div>
-  </header>
+  {% include "_header.html" %}
 
   <section>
     {% for chart in chart_data %}

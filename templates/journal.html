@@ -23,7 +23,8 @@
 </head>
 
 <body>
-  <header><h1>🧠 Mood Journal</h1></header>
+  {% set header_title = '🧠 Mood Journal' %}
+  {% include '_header.html' %}
 
   <pre style="white-space: pre-wrap;">{{ prompt }}</pre>
 

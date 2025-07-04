@@ -1,0 +1,28 @@
+<header>
+  <h1>{{ header_title }}</h1>
+  <div class="controls">
+    {% if show_theme_toggle|default(false) %}
+      <button class="theme-toggle"
+              @click="dark = !dark"
+              x-text="dark ? '🌗 Light Mode' : '🌑 Dark Mode'"></button>
+    {% endif %}
+    {% if show_export|default(false) %}
+      <a href="/export" class="button">📥 Export as CSV</a>
+    {% endif %}
+    {% if show_analytics|default(false) %}
+      <a href="/analytics" class="button">📊 Analytics</a>
+    {% endif %}
+    {% if show_journal_history|default(false) %}
+      <a href="/journal-history" class="button">📜 View Past Journals</a>
+    {% endif %}
+    {% if show_settings|default(false) %}
+      <a href="/settings" class="button">⚙️ Settings</a>
+    {% endif %}
+    {% if show_print|default(false) %}
+      <button class="button" onclick="window.print()">🖨️ Print View</button>
+    {% endif %}
+    {% if back_url is defined %}
+      <a href="{{ back_url }}" class="button">{{ back_label|default('← Back') }}</a>
+    {% endif %}
+  </div>
+</header>

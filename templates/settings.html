@@ -3,16 +3,13 @@
 {% block title %}⚙️ Settings – habit-track{% endblock %}
 
 {% block content %}
-  <header>
-    <h1>⚙️ Settings</h1>
-    <div class="controls">
-      <a href="/" class="button">← Back</a>
-      <button class="theme-toggle"
-              @click="dark = !dark"
-              x-text="dark ? '🌗 Light Mode' : '🌑 Dark Mode'"></button>
-      <a href="/journal-history" class="button">📜 View Past Journals</a>
-    </div>
-  </header>
+  {# ───── Header config for the partial ───── #}
+  {% set header_title           = '⚙️ Settings' %}
+  {% set back_url               = url_for('index') %}
+  {% set show_theme_toggle      = True %}
+  {% set show_journal_history   = True %}
+
+  {% include "_header.html" %}
 
   {% if message %}
     <p style="color: green;">{{ message }}</p>
