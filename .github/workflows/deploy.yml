@@ -2,52 +2,47 @@ name: Deploy to Droplet
 
 on:
   push:
-    branches: [ main ]     # adjust if your default branch differs
+    branches: [ main ]
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     env:
-      USER: root           # change if you deploy as another user
+      USER: root                 # SSH user
+      SERVICE_USER: www-data     # systemd runs under this user
 
     steps:
-    # 1️⃣ Check out repo
-    - name: Checkout code
-      uses: actions/checkout@v4
+    - uses: actions/checkout@v4
 
-    # 2️⃣ Start ssh-agent with the private deploy key
     - name: Set up SSH key
       uses: webfactory/ssh-agent@v0.8.0
       with:
         ssh-private-key: ${{ secrets.DEPLOY_KEY }}
 
-    # 3️⃣ Add droplet host key so ssh/rsync trusts it
     - name: Add droplet to known_hosts
       run: |
         mkdir -p ~/.ssh
         ssh-keyscan -H ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts
 
-    # 4️⃣ Sync repo to the droplet
-    - name: Copy project to droplet
+    - name: Sync project to droplet
       run: |
         rsync -az --delete \
           --exclude '.git' \
           ./ ${{ env.USER }}@${{ secrets.DEPLOY_HOST }}:${{ secrets.DEPLOY_PATH }}
 
-    # 5️⃣ Ensure venv exists → activate → pip install/upgrade
-    - name: Ensure venv & install deps on droplet
+    - name: Build venv + install deps + fix ownership
       run: |
         ssh ${{ env.USER }}@${{ secrets.DEPLOY_HOST }} "\
           cd ${DEPLOY_PATH} && \
           if [ ! -d venv ]; then python3 -m venv venv; fi && \
           source venv/bin/activate && \
-          pip install --quiet --upgrade pip && \
-          pip install --quiet --upgrade -r requirements.txt"
+          pip install -q --upgrade pip && \
+          pip install -q --upgrade -r requirements.txt && \
+          chown -R ${SERVICE_USER}:${SERVICE_USER} ${DEPLOY_PATH}"
       env:
         DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
 
-    # 6️⃣ Restart the habit service
     - name: Restart habit service
       run: |
-        ssh ${{ env.USER }}@${{ secrets.DEPLOY_HOST }} "\
-          sudo systemctl restart habit && sudo systemctl status habit --no-pager"
+        ssh ${{ env.USER }}@${{ secrets.DEPLOY_HOST }} \
+          "sudo systemctl restart habit && sudo systemctl status habit --no-pager"
