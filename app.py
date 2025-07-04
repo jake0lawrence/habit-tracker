@@ -207,10 +207,18 @@ def index():
 
 @app.post("/log")
 def log_habit():
-    habit = request.form["habit"]
-    duration = int(request.form["duration"])
+    habit = request.form.get("habit")
+    duration_str = request.form.get("duration")
     note = request.form.get("note", "").strip()
-    target_date = request.form["date"]
+    target_date = request.form.get("date")
+
+    if not habit or not duration_str or not target_date:
+        return {"error": "Missing habit, duration, or date"}, 400
+
+    if not str(duration_str).isdigit():
+        return {"error": "Duration must be a number"}, 400
+
+    duration = int(duration_str)
 
     backend = get_storage_backend()
     if request.args.get("delete") == "1":
