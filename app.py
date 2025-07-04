@@ -7,10 +7,14 @@ import storage
 import openai
 
 app = Flask(__name__)
-app.config.from_object(DevConfig)
 
 # Application mode: 'prod', 'dev', or 'test'.
 APP_MODE = os.getenv("APP_MODE", "prod")
+if APP_MODE == "prod":
+    app.config.from_object(ProdConfig)
+else:
+    app.config.from_object(DevConfig)
+
 app.config["APP_MODE"] = APP_MODE
 app.config["PWA_ENABLED"] = APP_MODE == "prod"
 
@@ -397,6 +401,8 @@ if __name__ == "__main__":
 
     if args.mode == "prod":
         app.config.from_object(ProdConfig)
+    else:
+        app.config.from_object(DevConfig)
 
     env_debug = os.getenv("DEBUG", "").lower() in {"1", "true", "yes"}
     debug = args.debug or env_debug or app.config.get("DEBUG", False)
