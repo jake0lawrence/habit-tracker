@@ -56,6 +56,12 @@ button, .button {
   transition: background 0.2s;
   text-decoration: none;
 }
+body.dark button,
+body.dark .button {
+  background: #444;
+  color: #e0e0e0;
+  border-color: #666;
+}
 
 button.done {
   background: #a2e6a2;
