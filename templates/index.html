@@ -1,42 +1,18 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <title>habit-track</title>
+{% extends "base.html" %}
 
-  <!-- JS -->
+{% block title %}habit-track{% endblock %}
+
+{% block head_scripts %}
   <script src="{{ url_for('static', filename='htmx.min.js') }}"></script>
-  <script src="{{ url_for('static', filename='alpine.min.js') }}" defer></script>
+{% endblock %}
 
-  <!-- CSS -->
-  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+{% block extra_head %}
+  <script id="mood-data" type="application/json">{{ mood_stats | tojson }}</script>
+{% endblock %}
 
-  {% if config.PWA_ENABLED and 'github.dev' not in request.host %}
-    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
-    <script>
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register(
-          "{{ url_for('static', filename='service-worker.js') }}"
-        );
-      }
-    </script>
-  {% endif %}
-  <link rel="icon" type="image/svg+xml" href="/static/icons/icon.svg">
-</head>
+{% block body_attrs %}x-data="getAppState()" x-init="$watch('dark', v => localStorage.setItem('darkMode', v))" :class="{ dark }"{% endblock %}
 
-<!-- snapshot of mood_stats for Alpine -->
-<script id="mood-data" type="application/json">{{ mood_stats | tojson }}</script>
-
-<body x-data="getAppState()"
-      x-init="$watch('dark', v => localStorage.setItem('darkMode', v))"
-      :class="{ dark }">
-
-{% if debug %}
-  <div class="debug-banner">
-    DEBUG MODE ON | Dark: <span x-text="dark"></span> | PWA: {{ config.PWA_ENABLED }}
-  </div>
-{% endif %}
-
+{% block content %}
 <header>
   <h1>🤖 Habit Tracker</h1>
   <div class="controls">
@@ -162,5 +138,4 @@
     document.body.__x.$data.showToast(`Save failed (${code})`, true);
   });
 </script>
-</body>
-</html>
+{% endblock %}

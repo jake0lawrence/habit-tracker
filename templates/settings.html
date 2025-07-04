@@ -1,33 +1,8 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <title>⚙️ Settings – habit-track</title>
+{% extends "base.html" %}
 
-  <!-- JS -->
-  <script src="{{ url_for('static', filename='alpine.min.js') }}" defer></script>
+{% block title %}⚙️ Settings – habit-track{% endblock %}
 
-  <!-- CSS -->
-  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-
-  {% if config.PWA_ENABLED and 'github.dev' not in request.host %}
-    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
-    <script>
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register(
-          "{{ url_for('static', filename='service-worker.js') }}"
-        );
-      }
-    </script>
-  {% endif %}
-
-  <link rel="icon" type="image/svg+xml" href="/static/icons/icon.svg">
-</head>
-
-<body x-data="{ dark: JSON.parse(localStorage.getItem('darkMode') || 'true') }"
-      x-init="$watch('dark', v => localStorage.setItem('darkMode', v))"
-      :class="{ dark }">
-
+{% block content %}
   <header>
     <h1>⚙️ Settings</h1>
     <div class="controls">
@@ -72,5 +47,4 @@
 
     <button type="submit" class="button">💾 Save Settings</button>
   </form>
-</body>
-</html>
+{% endblock %}
