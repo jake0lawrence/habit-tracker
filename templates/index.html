@@ -124,6 +124,7 @@
   <script>
     /* Success toast after habit grid swap */
     htmx.on('htmx:afterSwap', e => {
+      if (!e.detail || !e.detail.target) return;
       if (e.detail.target.id === 'habit-grid') {
         document.body.__x.$data.showToast('Saved ✔️');
       }
@@ -131,8 +132,10 @@
 
     /* Error toast for non-200 responses */
     htmx.on('htmx:responseError', e => {
-      const code = e.detail.xhr.status;
-      document.body.__x.$data.showToast(`Save failed (${code})`, true);
+      if (document.body.__x && e.detail) {
+        const code = e.detail.xhr.status;
+        document.body.__x.$data.showToast(`Save failed (${code})`, true);
+      }
     });
   </script>
 {% endblock %}
