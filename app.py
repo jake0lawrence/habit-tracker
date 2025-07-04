@@ -252,7 +252,15 @@ def log_habit():
 
 @app.route("/mood", methods=["POST"])
 def log_mood():
-    score = int(request.form["score"])
+    score_str = request.form.get("score")
+    if score_str is None:
+        return {"status": "error", "message": "score required"}, 400
+    try:
+        score = int(score_str)
+    except (TypeError, ValueError):
+        return {"status": "error", "message": "invalid score"}, 400
+    if not 1 <= score <= 5:
+        return {"status": "error", "message": "invalid score"}, 400
     backend = get_storage_backend()
     today = str(datetime.date.today())
     backend.save_mood(today, score)
