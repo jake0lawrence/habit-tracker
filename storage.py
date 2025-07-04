@@ -2,6 +2,7 @@ import os
 import json
 import sqlite3
 import datetime
+import logging
 from pathlib import Path
 from contextlib import closing
 
@@ -266,7 +267,11 @@ def get_backend(json_path=None):
         return get_backend._cache[key]
 
     if os.getenv("DATABASE_URL"):
-        backend = PostgresBackend(os.getenv("DATABASE_URL"))
+        try:
+            backend = PostgresBackend(os.getenv("DATABASE_URL"))
+        except Exception as e:  # pragma: no cover - safety net
+            logging.warning("Postgres connection failed: %s", e)
+            backend = SQLiteBackend("data/habits.db")
     elif os.getenv("APP_MODE") == "prod":
         backend = SQLiteBackend("data/habits.db")
     else:
