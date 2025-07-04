@@ -1,44 +1,18 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <title>📊 Analytics – habit-track</title>
+{% extends "base.html" %}
 
-  <!-- JS -->
+{% block title %}📊 Analytics – habit-track{% endblock %}
+
+{% block head_scripts %}
   <script src="{{ url_for('static', filename='chart.min.js') }}"></script>
-  <script src="{{ url_for('static', filename='alpine.min.js') }}" defer></script>
+{% endblock %}
 
-  <!-- CSS -->
-  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+{# ───── Header config for the partial ───── #}
+{% set header_title = '📈 Analytics' %}
+{% set back_url = url_for('index') %}
+{% set show_theme_toggle = True %}
 
-  {% if config.PWA_ENABLED %}
-    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
-    <script>
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register(
-          "{{ url_for('static', filename='service-worker.js') }}"
-        );
-      }
-    </script>
-  {% endif %}
-
-  <link rel="icon" type="image/svg+xml" href="/static/icons/icon.svg">
-</head>
-
-<body x-data="{ dark: JSON.parse(localStorage.getItem('darkMode') || 'true') }"
-      x-init="$watch('dark', v => localStorage.setItem('darkMode', v))"
-      :class="{ dark }">
-
-  {% if debug %}
-  <div class="debug-banner">
-    DEBUG MODE ON | Dark: <span x-text="dark"></span> | PWA: {{ config.PWA_ENABLED }}
-  </div>
-  {% endif %}
-
-  {% set header_title = '📈 Analytics' %}
-  {% set back_url = '/' %}
-  {% set show_theme_toggle = True %}
-  {% include '_header.html' %}
+{% block content %}
+  {% include "_header.html" %}
 
   <section>
     {% for chart in chart_data %}
@@ -104,5 +78,4 @@
       </script>
     </div>
   </section>
-</body>
-</html>
+{% endblock %}

@@ -1,161 +1,138 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <title>habit-track</title>
+{% extends "base.html" %}
 
-  <!-- JS -->
+{% block title %}habit-track{% endblock %}
+
+{% block head_scripts %}
   <script src="{{ url_for('static', filename='htmx.min.js') }}"></script>
-  <script src="{{ url_for('static', filename='alpine.min.js') }}" defer></script>
+{% endblock %}
 
-  <!-- CSS -->
-  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+{% block extra_head %}
+  <script id="mood-data" type="application/json">{{ mood_stats | tojson }}</script>
+{% endblock %}
 
-  {% if config.PWA_ENABLED and 'github.dev' not in request.host %}
-    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
-    <script>
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register(
-          "{{ url_for('static', filename='service-worker.js') }}"
-        );
-      }
-    </script>
-  {% endif %}
-  <link rel="icon" type="image/svg+xml" href="/static/icons/icon.svg">
-</head>
+{% block body_attrs %}x-data="getAppState()" x-init="$watch('dark', v => localStorage.setItem('darkMode', v))" :class="{ dark }"{% endblock %}
 
-<!-- snapshot of mood_stats for Alpine -->
-<script id="mood-data" type="application/json">{{ mood_stats | tojson }}</script>
+{% block content %}
+  {# ───── Header config for the partial ───── #}
+  {% set header_title           = '🤖 Habit Tracker' %}
+  {% set show_theme_toggle      = True %}
+  {% set show_export            = True %}
+  {% set show_analytics         = True %}
+  {% set show_journal_history   = True %}
+  {% set show_settings          = True %}
+  {% set show_print             = True %}
 
-<body x-data="getAppState()"
-      x-init="$watch('dark', v => localStorage.setItem('darkMode', v))"
-      :class="{ dark }">
+  {% include "_header.html" %}
 
-{% if debug %}
-  <div class="debug-banner">
-    DEBUG MODE ON | Dark: <span x-text="dark"></span> | PWA: {{ config.PWA_ENABLED }}
-  </div>
-{% endif %}
+  <section class="summary-tiles">
+  {% for key, info in stats.items() %}
+    <div class="tile">
+      <h3>{{ info.label }}</h3>
+      <p>🔥 Streak: <strong>{{ info.streak }}</strong></p>
+      <p>⏱️ Avg: <strong>{{ info.avg_duration }}&nbsp;min</strong></p>
+    </div>
+  {% endfor %}
+  </section>
 
-{% set header_title = '🤖 Habit Tracker' %}
-{% set show_theme_toggle = True %}
-{% set show_export = True %}
-{% set show_analytics = True %}
-{% set show_journal_history = True %}
-{% set show_settings = True %}
-{% set show_print = True %}
-{% include '_header.html' %}
+  <section>
+    <h2>🗓️ Weekly Habit Grid</h2>
+    <div id="habit-grid">
+      {% include '_habit_row.html' %}
+    </div>
+  </section>
 
-<section class="summary-tiles">
-{% for key, info in stats.items() %}
-  <div class="tile">
-    <h3>{{ info.label }}</h3>
-    <p>🔥 Streak: <strong>{{ info.streak }}</strong></p>
-    <p>⏱️ Avg: <strong>{{ info.avg_duration }}&nbsp;min</strong></p>
-  </div>
-{% endfor %}
-</section>
-
-<section>
-  <h2>🗓️ Weekly Habit Grid</h2>
-  <div id="habit-grid">
-    {% include '_habit_row.html' %}
-  </div>
-</section>
-
-<section class="mood-block">
-  <h2>🧠 Mood Score</h2>
-  <form hx-post="/mood"
-        hx-trigger="change"
-        hx-target="this"
-        hx-swap="none"
-        hx-on="htmx:afterRequest: moodSaved=true; setTimeout(()=>moodSaved=false,1000)">
-    <input  type="range" name="score" min="1" max="5" x-model="mood">
-    <output x-text="mood" style="margin-left:.5em"></output>
-    <span x-show="moodSaved" class="save-indicator" x-transition>✅</span>
-  </form>
-
-  <div class="mood-summary tile">
-    <h3>📋 Mood Summary</h3>
-    <p>7-day Avg:  <strong x-text="moodStats.weekly_avg.toFixed(1)"></strong></p>
-    <p>30-day Avg: <strong x-text="moodStats['30d_avg'].toFixed(1)"></strong></p>
-    <p>Overall Avg:<strong x-text="moodStats.overall_avg.toFixed(1)"></strong></p>
-  </div>
-</section>
-
-<!-- ── Modal ─────────────────────────────────────────────────────────── -->
-<div class="modal" x-show="showModal" @keydown.escape.window="showModal=false" style="display:none">
-  <div class="modal-content" @click.outside="showModal=false">
-    <h3 x-text="form.label"></h3>
-
-    <form hx-post="/log"
-          hx-target="#habit-grid"
-          hx-swap="outerHTML"
-          @submit.prevent="
-            localStorage.setItem(`${form.habit}_duration`, form.duration);
-            localStorage.setItem(`${form.habit}_note`,     form.note);
-            showModal = false">
-
-      <input type="hidden" name="habit" :value="form.habit">
-      <input type="hidden" name="date"  :value="form.date">
-
-      <label>Duration (minutes):</label>
-      <input type="number" name="duration" x-model="form.duration" min="1" required>
-
-      <label>Note:</label>
-      <input type="text" name="note" x-model="form.note" placeholder="Optional note">
-
-      <div class="modal-actions">
-        <button type="submit">✅ Save</button>
-        <button type="button" @click="showModal=false">Cancel</button>
-      </div>
+  <section class="mood-block">
+    <h2>🧠 Mood Score</h2>
+    <form hx-post="/mood"
+          hx-trigger="change"
+          hx-target="this"
+          hx-swap="none"
+          hx-on="htmx:afterRequest: moodSaved=true; setTimeout(()=>moodSaved=false,1000)">
+      <input  type="range" name="score" min="1" max="5" x-model="mood">
+      <output x-text="mood" style="margin-left:.5em"></output>
+      <span x-show="moodSaved" class="save-indicator" x-transition>✅</span>
     </form>
+
+    <div class="mood-summary tile">
+      <h3>📋 Mood Summary</h3>
+      <p>7-day Avg:  <strong x-text="moodStats.weekly_avg.toFixed(1)"></strong></p>
+      <p>30-day Avg: <strong x-text="moodStats['30d_avg'].toFixed(1)"></strong></p>
+      <p>Overall Avg:<strong x-text="moodStats.overall_avg.toFixed(1)"></strong></p>
+    </div>
+  </section>
+
+  <!-- ── Modal ───────────────────────────────────────────────────────── -->
+  <div class="modal" x-show="showModal" @keydown.escape.window="showModal=false" style="display:none">
+    <div class="modal-content" @click.outside="showModal=false">
+      <h3 x-text="form.label"></h3>
+
+      <form hx-post="/log"
+            hx-target="#habit-grid"
+            hx-swap="outerHTML"
+            @submit.prevent="
+              localStorage.setItem(`${form.habit}_duration`, form.duration);
+              localStorage.setItem(`${form.habit}_note`,     form.note);
+              showModal = false">
+
+        <input type="hidden" name="habit" :value="form.habit">
+        <input type="hidden" name="date"  :value="form.date">
+
+        <label>Duration (minutes):</label>
+        <input type="number" name="duration" x-model="form.duration" min="1" required>
+
+        <label>Note:</label>
+        <input type="text" name="note" x-model="form.note" placeholder="Optional note">
+
+        <div class="modal-actions">
+          <button type="submit">✅ Save</button>
+          <button type="button" @click="showModal=false">Cancel</button>
+        </div>
+      </form>
+    </div>
   </div>
-</div>
 
-<!-- ── Toast element ─────────────────────────────────────────────────── -->
-<div  x-ref="toast"
-      :class="{'toast': true, 'show': toast.show, 'error': toast.error}">
-  <span x-text="toast.message"></span>
-</div>
+  <!-- ── Toast element ───────────────────────────────────────────────── -->
+  <div  x-ref="toast"
+        :class="{'toast': true, 'show': toast.show, 'error': toast.error}">
+    <span x-text="toast.message"></span>
+  </div>
 
-<script>
-  function getAppState () {
-    return {
-      // reactive state
-      dark      : JSON.parse(localStorage.getItem('darkMode') || 'true'),
-      mood      : {{ mood or 3 }},
-      moodSaved : false,
-      showModal : false,
-      form      : { habit:'', label:'', duration:15, note:'', date:'' },
-      moodStats : JSON.parse(document.getElementById('mood-data').textContent),
+  <script>
+    function getAppState () {
+      return {
+        // reactive state
+        dark      : JSON.parse(localStorage.getItem('darkMode') || 'true'),
+        mood      : {{ mood or 3 }},
+        moodSaved : false,
+        showModal : false,
+        form      : { habit:'', label:'', duration:15, note:'', date:'' },
+        moodStats : JSON.parse(document.getElementById('mood-data').textContent),
 
-      // toast state
-      toast: { show:false, message:'', error:false },
+        // toast state
+        toast: { show:false, message:'', error:false },
 
-      showToast(msg, isError=false) {
-        this.toast.message = msg;
-        this.toast.error   = isError;
-        this.toast.show    = true;
-        setTimeout(() => this.toast.show = false, 3000);
+        showToast(msg, isError=false) {
+          this.toast.message = msg;
+          this.toast.error   = isError;
+          this.toast.show    = true;
+          setTimeout(() => this.toast.show = false, 3000);
+        }
       }
     }
-  }
-</script>
+  </script>
 
-<script>
-  /* Success toast after habit grid swap */
-  htmx.on('htmx:afterSwap', e => {
-    if (e.detail.target.id === 'habit-grid') {
-      document.body.__x.$data.showToast('Saved ✔️');
-    }
-  });
+  <script>
+    /* Success toast after habit grid swap */
+    htmx.on('htmx:afterSwap', e => {
+      if (e.detail.target.id === 'habit-grid') {
+        document.body.__x.$data.showToast('Saved ✔️');
+      }
+    });
 
-  /* Error toast for non-200 responses */
-  htmx.on('htmx:responseError', e => {
-    const code = e.detail.xhr.status;
-    document.body.__x.$data.showToast(`Save failed (${code})`, true);
-  });
-</script>
-</body>
-</html>
+    /* Error toast for non-200 responses */
+    htmx.on('htmx:responseError', e => {
+      const code = e.detail.xhr.status;
+      document.body.__x.$data.showToast(`Save failed (${code})`, true);
+    });
+  </script>
+{% endblock %}
