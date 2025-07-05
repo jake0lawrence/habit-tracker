@@ -53,7 +53,7 @@
       <button
         @click="offset -= 7"
         hx-get="/grid"
-        hx-vals="js:{offset: this.closest('#week-nav').__x.$data.offset}"
+        hx-vals="js:{offset: event.target.closest('#week-nav').__x.$data.offset}"
         hx-target="#habit-grid"
         hx-swap="outerHTML">
         ‹
@@ -66,7 +66,7 @@
         :disabled="offset === 0"
         @click="offset += 7"
         hx-get="/grid"
-        hx-vals="js:{offset: this.closest('#week-nav').__x.$data.offset}"
+        hx-vals="js:{offset: event.target.closest('#week-nav').__x.$data.offset}"
         hx-target="#habit-grid"
         hx-swap="outerHTML">
         ›
