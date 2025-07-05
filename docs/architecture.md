@@ -33,7 +33,7 @@ htmx swaps only the relevant fragment on each page, so full reloads are rare.
 | ID  | Goal                      | Success Signal                               |
 | --- | ------------------------- | -------------------------------------------- |
 | G‑1 | **Log a habit in < 10 s** | One click/tap + Save toast                   |
-| G‑2 | **Own the data**          | JSON dev / SQLite prod; one‑click export     |
+| G‑2 | **Own the data**          | JSON dev (no accounts) / SQLite prod; one‑click export     |
 | G‑3 | **Zero downtime offline** | PWA manifests + service‑worker cache         |
 | G‑4 | **Reliable Save**         | Static `/log` endpoint, toast shows ✔️       |
 | G‑5 | **Guided reflection**     | GPT‑generated prompt when mood logged        |
@@ -52,7 +52,7 @@ htmx swaps only the relevant fragment on each page, so full reloads are rare.
 | Styling           | Vanilla CSS + dark‑mode class             |  Lightweight           |
 | AI Integration    | OpenAI GPT‑4o via `/journal-prompt`       | Generates daily prompt |
 | PWA               | Workbox‑generated service worker          | Offline‑first          |
-| Persistence       | JSON (dev) ➜ SQLite or Postgres (prod)    | Own data               |
+| Persistence       | JSON (dev, no accounts) ➜ SQLite or Postgres (prod)    | Own data               |
 | Tests             | **Pytest** (unit) • **Playwright** (e2e)  | CI coverage            |
 | Optional CLI      | Typer + Rich (legacy)                     | Terminal lovers        |
 

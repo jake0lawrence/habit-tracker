@@ -66,6 +66,28 @@ class JSONBackend:
         series.sort(key=lambda x: x["date"])
         return series
 
+    # --- account helpers -------------------------------------------------
+    def create_user(self, email, password_hash):
+        """Unsupported helper for parity with DB backends."""
+        raise NotImplementedError(
+            "JSON backend does not support user accounts. "
+            "Run with APP_MODE=prod for SQLite/Postgres."
+        )
+
+    def get_user(self, user_id):
+        """Unsupported helper for parity with DB backends."""
+        raise NotImplementedError(
+            "JSON backend does not support user accounts. "
+            "Run with APP_MODE=prod for SQLite/Postgres."
+        )
+
+    def get_user_by_email(self, email):
+        """Unsupported helper for parity with DB backends."""
+        raise NotImplementedError(
+            "JSON backend does not support user accounts. "
+            "Run with APP_MODE=prod for SQLite/Postgres."
+        )
+
 
 class SQLiteBackend:
     def __init__(self, db_path="data/habits.db"):
