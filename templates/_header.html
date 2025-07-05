@@ -24,5 +24,13 @@
     {% if back_url is defined %}
       <a href="{{ back_url }}" class="button">{{ back_label|default('← Back') }}</a>
     {% endif %}
+    {% if current_user is defined and current_user.is_authenticated %}
+      <form action="/logout" method="post" style="display:inline;">
+        <button type="submit" class="button">Log Out</button>
+      </form>
+    {% else %}
+      <a href="/signup" class="button">Sign Up</a>
+      <a href="/login" class="button">Log In</a>
+    {% endif %}
   </div>
 </header>
