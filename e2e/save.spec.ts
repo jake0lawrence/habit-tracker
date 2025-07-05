@@ -14,4 +14,9 @@ test('log habit end-to-end', async ({ page }) => {
 
   // Grid should now show the new entry
   await expect(page.getByText('✅ 7 min')).toBeVisible();
+
+  // Toast should briefly appear
+  const toast = page.locator('.toast');
+  await expect(toast).toContainText('Saved');
+  await expect(toast).toHaveClass(/show/);
 });
