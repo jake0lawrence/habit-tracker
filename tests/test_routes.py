@@ -246,3 +246,16 @@ def test_journal_history(tmp_path):
     finally:
         flask_app_module.JOURNAL_FILE = orig_journal
         restore(orig_data, orig_config)
+
+
+def test_grid_previous_week(tmp_path):
+    client, orig_data, orig_config = make_client(tmp_path)
+    try:
+        backend = flask_app_module.get_storage_backend()
+        start = flask_app_module.monday_of_current_week() - datetime.timedelta(days=7)
+        backend.save_habit(str(start), "med", 42, "note")
+        res = client.get("/grid?offset=-7")
+        assert res.status_code == 200
+        assert "42&nbsp;min" in res.get_data(as_text=True)
+    finally:
+        restore(orig_data, orig_config)

@@ -36,7 +36,21 @@
 
   <section>
     <h2>🗓️ Weekly Habit Grid</h2>
-    <div id="habit-grid">
+    <div id="week-nav" class="week-nav" x-data="{offset:0, weekLabel:'{{ week_label }}'}"
+         @htmx:afterSwap.window="if($event.detail.target.id==='habit-grid'){weekLabel=$event.detail.target.dataset.weekLabel}">
+      <button @click="offset -= 7"
+              hx-get="/grid?offset={{ '{{' }} offset {{ '}}' }}"
+              hx-target="#habit-grid"
+              hx-swap="outerHTML">‹</button>
+      <span x-text="weekLabel"></span>
+      <button @click="offset += 7"
+              :disabled="offset === 0"
+              hx-get="/grid?offset={{ '{{' }} offset {{ '}}' }}"
+              hx-target="#habit-grid"
+              hx-swap="outerHTML">›</button>
+    </div>
+    <div id="habit-grid" data-week-label="{{ week_label }}">
+      <div class="week-label">{{ week_label }}</div>
       {% include '_habit_row.html' %}
     </div>
   </section>
