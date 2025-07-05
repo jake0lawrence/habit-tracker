@@ -46,6 +46,7 @@ htmx swaps only the relevant fragment on each page, so full reloads are rare.
 | Layer             | Technology                                | Why                    |
 | ----------------- | ----------------------------------------- | ---------------------- |
 | Backend           | **Flask 2**                               | Routing + Jinja        |
+| Auth              | **Flask‑Login**, **passlib[bcrypt]**      | Sessions & hashing     |
 | Front‑end runtime | **htmx 1.9** • **Alpine 3.13**            | 6 kB each, declarative |
 | Charts            | **Chart.js 4** (imported on `/analytics`) | Zero build step        |
 | Styling           | Vanilla CSS + dark‑mode class             |  Lightweight           |
@@ -59,9 +60,19 @@ htmx swaps only the relevant fragment on each page, so full reloads are rare.
 
 ## 4 · Data Model
 
-### 4.1 HabitLog table
+### 4.1 Users table
+
+| col | type | note |
+| --- | ---- | ---- |
+| `id` | SERIAL PK | |
+| `email` | TEXT UNIQUE | login id |
+| `password_hash` | TEXT | bcrypt hash |
+| `created_at` | TIMESTAMP | signup time |
+
+### 4.2 HabitLog table
 
 | col        | type      | note        |
+| `user_id`  | INT FK    | references users |
 | ---------- | --------- | ----------- |
 | `date`     | DATE PK₁  |             |
 | `habit`    | TEXT PK₂  |             |
@@ -69,25 +80,29 @@ htmx swaps only the relevant fragment on each page, so full reloads are rare.
 | `note`     | TEXT      | optional    |
 | `ts`       | TIMESTAMP | server time |
 
-### 4.2 Mood table
+### 4.3 Mood table
 
-| col     | type      |
-| ------- | --------- |
-| `date`  | DATE PK   |
-| `score` | INT (1‑5) |
-| `ts`    | TIMESTAMP |
+| col      | type      | note             |
+| -------- | --------- | ---------------- |
+| `user_id`| INT FK    | references users |
+| `date`   | DATE PK   |                  |
+| `score`  | INT (1‑5) |                  |
+| `ts`     | TIMESTAMP |                  |
 
-### 4.3 Journal table
+### 4.4 Journal table
 
 | col      | type      | note                     |
 | -------- | --------- | ------------------------ |
 | `id`     | SERIAL PK |                          |
+| `user_id` | INT FK    | references users |
 | `date`   | DATE      | one per day              |
 | `text`   | TEXT      | Markdown/string          |
 | `prompt` | TEXT      | GPT prompt shown to user |
 | `ts`     | TIMESTAMP | save time                |
 
 *(If using JSON, journals live under `journal:{date}` keys.)*
+
+Existing installations will create a default account at upgrade; all pre-account data is attached to this user (id 1).
 
 ---
 
@@ -165,6 +180,8 @@ sequenceDiagram
 | ----- | -------------- | --------------------------------------------------------------------------------------- |
 | Unit  | Pytest         | `/log`, `/mood`, `/journal-entry` return **200**, DB rows created                       |
 | E2E   | Playwright     | 1) Log habit → ✅ badge 2) Write journal → appears in history 3) Analytics charts render |
+|       |                | *(install via `npm ci && npx playwright install --with-deps`)* |
+|       |                | *(tests skip if Playwright missing)* |
 | CI    | GitHub Actions | Runs both suites; Dependabot PRs auto-tested                                            |
 
 > **Dep‑drift guard:** Pin **Click 8.1.x** *or* upgrade **Typer ≥ 0.12** to avoid `CliRunner` mismatch.
