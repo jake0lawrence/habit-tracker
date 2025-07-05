@@ -76,6 +76,7 @@
 
         <input type="hidden" name="habit" :value="form.habit">
         <input type="hidden" name="date"  :value="form.date">
+        <input type="hidden" name="entry_id" :value="form.entry_id">
 
         <label>Duration (minutes):</label>
         <input type="number" name="duration" x-model="form.duration" min="1" required>
@@ -105,7 +106,7 @@
         mood      : {{ mood or 3 }},
         moodSaved : false,
         showModal : false,
-        form      : { habit:'', label:'', duration:15, note:'', date:'' },
+        form      : { habit:'', label:'', duration:15, note:'', date:'', entry_id:'' },
         moodStats : JSON.parse(document.getElementById('mood-data').textContent),
 
         // toast state
