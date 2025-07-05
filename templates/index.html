@@ -130,6 +130,15 @@
       }
     });
 
+    /* Success toast after mood log */
+    htmx.on('htmx:afterRequest', e => {
+      if (!e.detail || !e.detail.elt) return;
+      const el = e.detail.elt;
+      if (el.getAttribute('hx-post') === '/mood' && e.detail.xhr.status >= 200 && e.detail.xhr.status < 300) {
+        document.body.__x.$data.showToast('Saved ✔️');
+      }
+    });
+
     /* Error toast for non-200 responses */
     htmx.on('htmx:responseError', e => {
       if (document.body.__x && e.detail) {
