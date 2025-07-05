@@ -248,3 +248,16 @@ def test_journal_history(tmp_path):
     finally:
         flask_app_module.JOURNAL_FILE = orig_journal
         restore(orig_data, orig_config)
+
+
+def test_export_requires_login(tmp_path):
+    client, orig_data, orig_config = make_client(tmp_path)
+    try:
+        res = client.get("/export")
+        assert res.status_code == 401
+        client.post("/login", data={"username": "tester"})
+        res = client.get("/export")
+        assert res.status_code == 200
+        assert res.mimetype == "text/csv"
+    finally:
+        restore(orig_data, orig_config)

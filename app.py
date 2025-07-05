@@ -1,17 +1,5 @@
 from flask import Flask, render_template, request, redirect, send_file
-from flask_login import (
-    LoginManager,
-    login_user,
-    login_required,
-    logout_user,
-    current_user,
-    UserMixin,
-)
-from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField
-from wtforms.validators import DataRequired, Email, EqualTo, Length
-from argon2 import PasswordHasher
-
+from flask_login import LoginManager, UserMixin, login_user, login_required
 import json, os, datetime, csv
 from pathlib import Path
 from io import StringIO
@@ -388,6 +376,7 @@ def log_mood():
 
 
 @app.route("/export")
+@login_required
 def export_csv():
     backend = get_storage_backend()
     week = get_week_range()
