@@ -59,26 +59,34 @@ def get_week_range():
     return [start + datetime.timedelta(days=i) for i in range(7)]
 
 
-def calculate_habit_stats(data, week):
+def calculate_habit_stats(all_data, week):
+    """Return streak and average duration per habit."""
     stats = {}
     config = load_config()
+    today = datetime.date.today()
     for key, info in config.items():
         label = info["label"]
-        streak = 0
         total_duration = 0
         count = 0
-        streak_broken = False
 
-        for day in reversed(week):
-            entry = data.get(str(day), {}).get(key)
+        # Average duration uses only the provided week subset
+        for day in week:
+            entry = all_data.get(str(day), {}).get(key)
             if isinstance(entry, dict) and entry.get("duration"):
-                duration = entry["duration"]
-                total_duration += duration
+                total_duration += entry["duration"]
                 count += 1
-                if not streak_broken:
-                    streak += 1
+
+        # Compute streak walking backward from today using all loaded data
+        streak = 0
+        cur = today
+        while True:
+            # Skip future dates so they don't break the streak
+            entry = all_data.get(str(cur), {}).get(key)
+            if isinstance(entry, dict) and entry.get("duration"):
+                streak += 1
+                cur -= datetime.timedelta(days=1)
             else:
-                streak_broken = True
+                break
 
         avg = round(total_duration / count, 1) if count else 0
         stats[key] = {"label": label, "streak": streak, "avg_duration": avg}
@@ -202,7 +210,7 @@ def index():
     mood = data.get(str(today), {}).get("mood")
     mood_stats = calculate_mood_stats(all_data)
     config = load_config()
-    stats = calculate_habit_stats(data, week)
+    stats = calculate_habit_stats(all_data, week)
     return render_template(
         "index.html",
         habits=config,
