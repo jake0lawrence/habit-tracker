@@ -90,6 +90,26 @@ class SQLiteBackend:
                 );
                 """
             )
+
+            # --- migration: add user_id columns if missing ---
+            cur.execute("PRAGMA table_info(habit_log)")
+            cols = [r[1] for r in cur.fetchall()]
+            if "user_id" not in cols:
+                cur.execute(
+                    "ALTER TABLE habit_log ADD COLUMN user_id INTEGER REFERENCES users(id)"
+                )
+                cur.execute(
+                    "UPDATE habit_log SET user_id = 1 WHERE user_id IS NULL"
+                )
+
+            cur.execute("PRAGMA table_info(mood_log)")
+            cols = [r[1] for r in cur.fetchall()]
+            if "user_id" not in cols:
+                cur.execute(
+                    "ALTER TABLE mood_log ADD COLUMN user_id INTEGER REFERENCES users(id)"
+                )
+                cur.execute("UPDATE mood_log SET user_id = 1 WHERE user_id IS NULL")
+
             self.conn.commit()
 
     def load_all(self):
@@ -194,6 +214,32 @@ class PostgresBackend(SQLiteBackend):
                 );
                 """
             )
+
+            # --- migration: add user_id columns if missing ---
+            cur.execute(
+                "SELECT column_name FROM information_schema.columns WHERE table_name='habit_log'"
+            )
+            cols = {r[0] for r in cur.fetchall()}
+            if "user_id" not in cols:
+                cur.execute(
+                    "ALTER TABLE habit_log ADD COLUMN user_id INTEGER REFERENCES users(id)"
+                )
+                cur.execute(
+                    "UPDATE habit_log SET user_id = 1 WHERE user_id IS NULL"
+                )
+
+            cur.execute(
+                "SELECT column_name FROM information_schema.columns WHERE table_name='mood_log'"
+            )
+            cols = {r[0] for r in cur.fetchall()}
+            if "user_id" not in cols:
+                cur.execute(
+                    "ALTER TABLE mood_log ADD COLUMN user_id INTEGER REFERENCES users(id)"
+                )
+                cur.execute(
+                    "UPDATE mood_log SET user_id = 1 WHERE user_id IS NULL"
+                )
+
             self.conn.commit()
 
     # Psycopg2 uses %s placeholders

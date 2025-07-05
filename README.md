@@ -78,6 +78,9 @@ pytest -q                     # unit tests
 npm ci && npx playwright test # E2E smoke
 ```
 
+Playwright downloads browser binaries (~200 MB).
+If the packages aren't installed, `npm run e2e` exits without failing.
+
 ---
 
 ## 🚀 Deployment (Render/Heroku/Fly)

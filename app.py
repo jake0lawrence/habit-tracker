@@ -1,10 +1,23 @@
 from flask import Flask, render_template, request, redirect, send_file
+from flask_login import LoginManager, UserMixin, login_user
 import json, os, datetime, csv
 from pathlib import Path
 from io import StringIO
 from config import DevConfig, ProdConfig
 import storage
 import openai
+
+login_manager = LoginManager()
+
+
+class SimpleUser(UserMixin):
+    def __init__(self, user_id="user"):
+        self.id = user_id
+
+
+@login_manager.user_loader
+def load_user(user_id):
+    return SimpleUser(user_id)
 
 app = Flask(__name__)
 
@@ -19,6 +32,7 @@ def create_app(mode=None):
         app.config.from_object(DevConfig)
     app.config["APP_MODE"] = mode
     app.config["PWA_ENABLED"] = mode == "prod"
+    login_manager.init_app(app)
     return app
 
 
@@ -202,6 +216,16 @@ def enrich_prompt_with_ai(prompt):
 def get_storage_backend():
     """Return the configured storage backend."""
     return storage.get_backend(json_path=str(DATA_FILE))
+
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        username = request.form.get("username", "user")
+        user = SimpleUser(username)
+        login_user(user, remember=True)
+        return redirect("/")
+    return render_template("login.html")
 
 
 @app.route("/")

@@ -180,6 +180,8 @@ sequenceDiagram
 | ----- | -------------- | --------------------------------------------------------------------------------------- |
 | Unit  | Pytest         | `/log`, `/mood`, `/journal-entry` return **200**, DB rows created                       |
 | E2E   | Playwright     | 1) Log habit → ✅ badge 2) Write journal → appears in history 3) Analytics charts render |
+|       |                | *(install via `npm ci && npx playwright install --with-deps`)* |
+|       |                | *(tests skip if Playwright missing)* |
 | CI    | GitHub Actions | Runs both suites; Dependabot PRs auto-tested                                            |
 
 > **Dep‑drift guard:** Pin **Click 8.1.x** *or* upgrade **Typer ≥ 0.12** to avoid `CliRunner` mismatch.
