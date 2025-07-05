@@ -40,7 +40,8 @@
                       label:    '{{ label }}',
                       duration: {{ entry.duration }},
                       note:     `{{ entry.note | e }}`,
-                      date:     '{{ day|string }}'
+                      date:     '{{ day|string }}',
+                      entry_id: '{{ day|string }}_{{ key }}'
                     };
                   "
                   title="Edit entry"
@@ -58,12 +59,12 @@
                     label:    '{{ label }}',
                     duration: parseInt(localStorage.getItem('{{ key }}_duration')) || {{ info.default_duration }},
                     note:     localStorage.getItem('{{ key }}_note') || '',
-                    date:     '{{ day|string }}'
+                    date:     '{{ day|string }}',
+                    entry_id: ''
                   };
                 "
               >Log</button>
             {% endif %}
-
           {# ─────────────── PAST / FUTURE DAYS ─────────── #}
           {% else %}
             {% if entry is mapping %}
@@ -77,6 +78,31 @@
               –
             {% endif %}
           {% endif %}
+
+          <button
+            class="cell-edit-icon"
+            data-habit="{{ key }}"
+            data-label="{{ label }}"
+            data-duration="{{ entry.duration if entry else '' }}"
+            data-note="{{ entry.note if entry else '' }}"
+            data-date="{{ day|string }}"
+            data-default="{{ info.default_duration }}"
+            @click.prevent="
+              showModal = true;
+              const dur = $el.dataset.duration;
+              const note = $el.dataset.note;
+              const habit = $el.dataset.habit;
+              form = {
+                habit: habit,
+                label: $el.dataset.label,
+                duration: dur ? parseInt(dur) : (parseInt(localStorage.getItem(habit + '_duration')) || parseInt($el.dataset.default)),
+                note: note || localStorage.getItem(habit + '_note') || '',
+                date: $el.dataset.date,
+                entry_id: $el.dataset.date + '_' + habit
+              };
+            "
+            title="Edit"
+          >✏️</button>
         </td>
       {% endfor %}
     </tr>
