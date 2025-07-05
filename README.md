@@ -66,6 +66,7 @@ Open [http://localhost:5000](http://localhost:5000) & start tracking.
 ## 🧪 Tests
 
 ```bash
+pip install -r requirements.txt  # install Flask, Typer & friends
 pytest -q                     # unit tests
 npm ci && npx playwright test # E2E smoke
 ```
