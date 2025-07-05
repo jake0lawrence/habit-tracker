@@ -7,6 +7,7 @@ def test_log_save(tmp_path):
     orig_config = app.CONFIG_FILE
     app.DATA_FILE = tmp_path / "data.json"
     app.CONFIG_FILE = tmp_path / "config.json"
+    app.app.config["LOGIN_DISABLED"] = True
     client = app.app.test_client()
     try:
         rv = client.post('/log', data={
@@ -27,6 +28,7 @@ def test_log_missing_duration(tmp_path):
     orig_config = app.CONFIG_FILE
     app.DATA_FILE = tmp_path / "data.json"
     app.CONFIG_FILE = tmp_path / "config.json"
+    app.app.config["LOGIN_DISABLED"] = True
     client = app.app.test_client()
     try:
         rv = client.post(
@@ -44,6 +46,7 @@ def test_log_invalid_duration(tmp_path):
     orig_config = app.CONFIG_FILE
     app.DATA_FILE = tmp_path / "data.json"
     app.CONFIG_FILE = tmp_path / "config.json"
+    app.app.config["LOGIN_DISABLED"] = True
     client = app.app.test_client()
     try:
         rv = client.post(
@@ -65,6 +68,7 @@ def test_log_update_entry(tmp_path):
     orig_config = app.CONFIG_FILE
     app.DATA_FILE = tmp_path / "data.json"
     app.CONFIG_FILE = tmp_path / "config.json"
+    app.app.config["LOGIN_DISABLED"] = True
     client = app.app.test_client()
     try:
         date = "2030-01-02"

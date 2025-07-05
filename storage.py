@@ -28,25 +28,25 @@ class JSONBackend:
         with open(self.file, "w") as f:
             json.dump(data, f, indent=2)
 
-    def load_all(self):
+    def load_all(self, user_id=None):
         return self._load()
 
-    def save_habit(self, date, habit, duration, note=""):
+    def save_habit(self, date, habit, duration, note="", user_id=None):
         data = self._load()
         data.setdefault(date, {})[habit] = {"duration": duration, "note": note}
         self._save(data)
 
-    def delete_habit(self, date, habit):
+    def delete_habit(self, date, habit, user_id=None):
         data = self._load()
         data.get(date, {}).pop(habit, None)
         self._save(data)
 
-    def save_mood(self, date, score):
+    def save_mood(self, date, score, user_id=None):
         data = self._load()
         data.setdefault(date, {})["mood"] = score
         self._save(data)
 
-    def get_range(self, start_date, end_date):
+    def get_range(self, start_date, end_date, user_id=None):
         all_data = self._load()
         start = datetime.date.fromisoformat(start_date)
         end = datetime.date.fromisoformat(end_date)
@@ -57,7 +57,7 @@ class JSONBackend:
             cur += datetime.timedelta(days=1)
         return out
 
-    def get_mood_series(self):
+    def get_mood_series(self, user_id=None):
         data = self._load()
         series = []
         for date, info in data.items():
@@ -77,16 +77,27 @@ class SQLiteBackend:
         with closing(self.conn.cursor()) as cur:
             cur.executescript(
                 """
+                CREATE TABLE IF NOT EXISTS users (
+                  id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  email TEXT UNIQUE NOT NULL,
+                  password_hash TEXT NOT NULL,
+                  created_at TEXT DEFAULT CURRENT_TIMESTAMP
+                );
                 CREATE TABLE IF NOT EXISTS habit_log (
+                  user_id INTEGER NOT NULL,
                   date TEXT,
                   habit TEXT,
                   duration INT,
                   note TEXT,
-                  PRIMARY KEY(date, habit)
+                  PRIMARY KEY(user_id, date, habit),
+                  FOREIGN KEY(user_id) REFERENCES users(id)
                 );
                 CREATE TABLE IF NOT EXISTS mood_log (
-                  date TEXT PRIMARY KEY,
-                  score INT
+                  user_id INTEGER NOT NULL,
+                  date TEXT,
+                  score INT,
+                  PRIMARY KEY(user_id, date),
+                  FOREIGN KEY(user_id) REFERENCES users(id)
                 );
                 """
             )
@@ -112,62 +123,67 @@ class SQLiteBackend:
 
             self.conn.commit()
 
-    def load_all(self):
+    def load_all(self, user_id=1):
         data = {}
         with closing(self.conn.cursor()) as cur:
-            cur.execute("SELECT date, habit, duration, note FROM habit_log")
+            cur.execute(
+                "SELECT date, habit, duration, note FROM habit_log WHERE user_id=?",
+                (user_id,),
+            )
             for d, h, dur, note in cur.fetchall():
                 data.setdefault(d, {})[h] = {"duration": dur, "note": note}
-            cur.execute("SELECT date, score FROM mood_log")
+            cur.execute(
+                "SELECT date, score FROM mood_log WHERE user_id=?", (user_id,)
+            )
             for d, s in cur.fetchall():
                 data.setdefault(d, {})["mood"] = s
         return data
 
-    def save_habit(self, date, habit, duration, note=""):
+    def save_habit(self, date, habit, duration, note="", user_id=1):
         with closing(self.conn.cursor()) as cur:
             cur.execute(
                 """
-                INSERT INTO habit_log (date, habit, duration, note)
-                VALUES (?, ?, ?, ?)
-                ON CONFLICT(date, habit)
+                INSERT INTO habit_log (user_id, date, habit, duration, note)
+                VALUES (?, ?, ?, ?, ?)
+                ON CONFLICT(user_id, date, habit)
                 DO UPDATE SET duration=excluded.duration, note=excluded.note
                 """,
-                (date, habit, duration, note),
+                (user_id, date, habit, duration, note),
             )
             self.conn.commit()
 
-    def delete_habit(self, date, habit):
+    def delete_habit(self, date, habit, user_id=1):
         with closing(self.conn.cursor()) as cur:
             cur.execute(
-                "DELETE FROM habit_log WHERE date = ? AND habit = ?",
-                (date, habit),
+                "DELETE FROM habit_log WHERE user_id = ? AND date = ? AND habit = ?",
+                (user_id, date, habit),
             )
             self.conn.commit()
 
-    def save_mood(self, date, score):
+    def save_mood(self, date, score, user_id=1):
         with closing(self.conn.cursor()) as cur:
             cur.execute(
                 """
-                INSERT INTO mood_log (date, score)
-                VALUES (?, ?)
-                ON CONFLICT(date) DO UPDATE SET score=excluded.score
+                INSERT INTO mood_log (user_id, date, score)
+                VALUES (?, ?, ?)
+                ON CONFLICT(user_id, date) DO UPDATE SET score=excluded.score
                 """,
-                (date, score),
+                (user_id, date, score),
             )
             self.conn.commit()
 
-    def get_range(self, start_date, end_date):
+    def get_range(self, start_date, end_date, user_id=1):
         data = {}
         with closing(self.conn.cursor()) as cur:
             cur.execute(
-                "SELECT date, habit, duration, note FROM habit_log WHERE date BETWEEN ? AND ?",
-                (start_date, end_date),
+                "SELECT date, habit, duration, note FROM habit_log WHERE user_id=? AND date BETWEEN ? AND ?",
+                (user_id, start_date, end_date),
             )
             for d, h, dur, note in cur.fetchall():
                 data.setdefault(d, {})[h] = {"duration": dur, "note": note}
             cur.execute(
-                "SELECT date, score FROM mood_log WHERE date BETWEEN ? AND ?",
-                (start_date, end_date),
+                "SELECT date, score FROM mood_log WHERE user_id=? AND date BETWEEN ? AND ?",
+                (user_id, start_date, end_date),
             )
             for d, s in cur.fetchall():
                 data.setdefault(d, {})["mood"] = s
@@ -180,10 +196,45 @@ class SQLiteBackend:
             cur_date += datetime.timedelta(days=1)
         return data
 
-    def get_mood_series(self):
+    def get_mood_series(self, user_id=1):
         with closing(self.conn.cursor()) as cur:
-            cur.execute("SELECT date, score FROM mood_log ORDER BY date")
+            cur.execute(
+                "SELECT date, score FROM mood_log WHERE user_id=? ORDER BY date",
+                (user_id,),
+            )
             return [{"date": d, "score": s} for d, s in cur.fetchall()]
+
+    # ----- User management -----
+    def create_user(self, email, password_hash):
+        with closing(self.conn.cursor()) as cur:
+            cur.execute(
+                "INSERT INTO users (email, password_hash) VALUES (?, ?)",
+                (email, password_hash),
+            )
+            self.conn.commit()
+            return cur.lastrowid
+
+    def get_user(self, user_id):
+        with closing(self.conn.cursor()) as cur:
+            cur.execute(
+                "SELECT id, email, password_hash FROM users WHERE id=?",
+                (user_id,),
+            )
+            row = cur.fetchone()
+            if row:
+                return {"id": row[0], "email": row[1], "password_hash": row[2]}
+            return None
+
+    def get_user_by_email(self, email):
+        with closing(self.conn.cursor()) as cur:
+            cur.execute(
+                "SELECT id, email, password_hash FROM users WHERE email=?",
+                (email,),
+            )
+            row = cur.fetchone()
+            if row:
+                return {"id": row[0], "email": row[1], "password_hash": row[2]}
+            return None
 
 
 class PostgresBackend(SQLiteBackend):
@@ -197,20 +248,25 @@ class PostgresBackend(SQLiteBackend):
         with self.conn.cursor() as cur:
             cur.execute(
                 """
+                CREATE TABLE IF NOT EXISTS users (
+                  id SERIAL PRIMARY KEY,
+                  email TEXT UNIQUE NOT NULL,
+                  password_hash TEXT NOT NULL,
+                  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
                 CREATE TABLE IF NOT EXISTS habit_log (
+                  user_id INTEGER NOT NULL REFERENCES users(id),
                   date TEXT,
                   habit TEXT,
                   duration INT,
                   note TEXT,
-                  PRIMARY KEY(date, habit)
+                  PRIMARY KEY(user_id, date, habit)
                 );
-                """
-            )
-            cur.execute(
-                """
                 CREATE TABLE IF NOT EXISTS mood_log (
-                  date TEXT PRIMARY KEY,
-                  score INT
+                  user_id INTEGER NOT NULL REFERENCES users(id),
+                  date TEXT,
+                  score INT,
+                  PRIMARY KEY(user_id, date)
                 );
                 """
             )
@@ -243,51 +299,51 @@ class PostgresBackend(SQLiteBackend):
             self.conn.commit()
 
     # Psycopg2 uses %s placeholders
-    def save_habit(self, date, habit, duration, note=""):
+    def save_habit(self, date, habit, duration, note="", user_id=1):
         with self.conn.cursor() as cur:
             cur.execute(
                 """
-                INSERT INTO habit_log (date, habit, duration, note)
-                VALUES (%s, %s, %s, %s)
-                ON CONFLICT(date, habit)
+                INSERT INTO habit_log (user_id, date, habit, duration, note)
+                VALUES (%s, %s, %s, %s, %s)
+                ON CONFLICT(user_id, date, habit)
                 DO UPDATE SET duration=EXCLUDED.duration, note=EXCLUDED.note
                 """,
-                (date, habit, duration, note),
+                (user_id, date, habit, duration, note),
             )
             self.conn.commit()
 
-    def delete_habit(self, date, habit):
+    def delete_habit(self, date, habit, user_id=1):
         with self.conn.cursor() as cur:
             cur.execute(
-                "DELETE FROM habit_log WHERE date = %s AND habit = %s",
-                (date, habit),
+                "DELETE FROM habit_log WHERE user_id = %s AND date = %s AND habit = %s",
+                (user_id, date, habit),
             )
             self.conn.commit()
 
-    def save_mood(self, date, score):
+    def save_mood(self, date, score, user_id=1):
         with self.conn.cursor() as cur:
             cur.execute(
                 """
-                INSERT INTO mood_log (date, score)
-                VALUES (%s, %s)
-                ON CONFLICT(date) DO UPDATE SET score=EXCLUDED.score
+                INSERT INTO mood_log (user_id, date, score)
+                VALUES (%s, %s, %s)
+                ON CONFLICT(user_id, date) DO UPDATE SET score=EXCLUDED.score
                 """,
-                (date, score),
+                (user_id, date, score),
             )
             self.conn.commit()
 
-    def get_range(self, start_date, end_date):
+    def get_range(self, start_date, end_date, user_id=1):
         data = {}
         with self.conn.cursor() as cur:
             cur.execute(
-                "SELECT date, habit, duration, note FROM habit_log WHERE date BETWEEN %s AND %s",
-                (start_date, end_date),
+                "SELECT date, habit, duration, note FROM habit_log WHERE user_id=%s AND date BETWEEN %s AND %s",
+                (user_id, start_date, end_date),
             )
             for d, h, dur, note in cur.fetchall():
                 data.setdefault(d, {})[h] = {"duration": dur, "note": note}
             cur.execute(
-                "SELECT date, score FROM mood_log WHERE date BETWEEN %s AND %s",
-                (start_date, end_date),
+                "SELECT date, score FROM mood_log WHERE user_id=%s AND date BETWEEN %s AND %s",
+                (user_id, start_date, end_date),
             )
             for d, s in cur.fetchall():
                 data.setdefault(d, {})["mood"] = s
@@ -299,10 +355,46 @@ class PostgresBackend(SQLiteBackend):
             cur_date += datetime.timedelta(days=1)
         return data
 
-    def get_mood_series(self):
+    def get_mood_series(self, user_id=1):
         with self.conn.cursor() as cur:
-            cur.execute("SELECT date, score FROM mood_log ORDER BY date")
+            cur.execute(
+                "SELECT date, score FROM mood_log WHERE user_id=%s ORDER BY date",
+                (user_id,),
+            )
             return [{"date": d, "score": s} for d, s in cur.fetchall()]
+
+    # ----- User management -----
+    def create_user(self, email, password_hash):
+        with self.conn.cursor() as cur:
+            cur.execute(
+                "INSERT INTO users (email, password_hash) VALUES (%s, %s) RETURNING id",
+                (email, password_hash),
+            )
+            user_id = cur.fetchone()[0]
+            self.conn.commit()
+            return user_id
+
+    def get_user(self, user_id):
+        with self.conn.cursor() as cur:
+            cur.execute(
+                "SELECT id, email, password_hash FROM users WHERE id=%s",
+                (user_id,),
+            )
+            row = cur.fetchone()
+            if row:
+                return {"id": row[0], "email": row[1], "password_hash": row[2]}
+            return None
+
+    def get_user_by_email(self, email):
+        with self.conn.cursor() as cur:
+            cur.execute(
+                "SELECT id, email, password_hash FROM users WHERE email=%s",
+                (email,),
+            )
+            row = cur.fetchone()
+            if row:
+                return {"id": row[0], "email": row[1], "password_hash": row[2]}
+            return None
 
 
 def get_backend(json_path=None):

@@ -1,13 +1,14 @@
 {% extends "base.html" %}
 {% block content %}
-  {% set header_title = 'Login' %}
+  {% set header_title = 'Sign Up' %}
   {% include "_header.html" %}
   <form method="post">
     {{ form.hidden_tag() }}
     {% if message %}<p>{{ message }}</p>{% endif %}
     <p>{{ form.email.label }} {{ form.email() }}</p>
     <p>{{ form.password.label }} {{ form.password() }}</p>
-    <button type="submit">Login</button>
+    <p>{{ form.confirm.label }} {{ form.confirm() }}</p>
+    <button type="submit">Sign Up</button>
   </form>
-  <p>No account? <a href="/signup">Sign up</a></p>
+  <p>Already have an account? <a href="/login">Login</a></p>
 {% endblock %}
