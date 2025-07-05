@@ -103,10 +103,12 @@ th, td {
 
 .cell-done {
   background-color: #d0f0d0;
+  position: relative;
 }
 
 .cell-empty {
   background-color: #f4f4f4;
+  position: relative;
 }
 
 body.dark table, body.dark th, body.dark td {
@@ -154,6 +156,26 @@ body.dark .edit-button {
 }
 body.dark .edit-button:hover {
   color: #fff;
+}
+
+/* Small edit icon for all grid cells */
+.cell-edit-icon {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  font-size: 0.8em;
+  background: none;
+  border: none;
+  color: #888;
+  display: none;
+  cursor: pointer;
+  padding: 0;
+}
+td:hover .cell-edit-icon {
+  display: block;
+}
+body.dark .cell-edit-icon {
+  color: #ccc;
 }
 
 /* Dashboard Tiles */

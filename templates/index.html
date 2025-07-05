@@ -10,7 +10,7 @@
   <script id="mood-data" type="application/json">{{ mood_stats | tojson }}</script>
 {% endblock %}
 
-{% block body_attrs %}x-data="getAppState()" x-init="$watch('dark', v => localStorage.setItem('darkMode', v))" :class="{ dark }"{% endblock %}
+{% block body_attrs %}x-data="getAppState()" x-init="init(); $watch('dark', v => localStorage.setItem('darkMode', v))" :class="{ dark }"{% endblock %}
 
 {% block content %}
   {# ───── Header config for the partial ───── #}
@@ -76,6 +76,7 @@
 
         <input type="hidden" name="habit" :value="form.habit">
         <input type="hidden" name="date"  :value="form.date">
+        <input type="hidden" name="entry_id" :value="form.entry_id">
 
         <label>Duration (minutes):</label>
         <input type="number" name="duration" x-model="form.duration" min="1" required>
@@ -105,7 +106,7 @@
         mood      : {{ mood or 3 }},
         moodSaved : false,
         showModal : false,
-        form      : { habit:'', label:'', duration:15, note:'', date:'' },
+        form      : { habit:'', label:'', duration:15, note:'', date:'', entry_id:'' },
         moodStats : JSON.parse(document.getElementById('mood-data').textContent),
 
         // toast state
@@ -117,6 +118,10 @@
           this.toast.show    = true;
           setTimeout(() => this.toast.show = false, 3000);
         }
+        ,
+        init() {
+          window.showToast = (msg, err=false) => this.showToast(msg, err);
+        }
       }
     }
   </script>
@@ -126,7 +131,7 @@
     htmx.on('htmx:afterSwap', e => {
       if (!e.detail || !e.detail.target) return;
       if (e.detail.target.id === 'habit-grid') {
-        document.body.__x.$data.showToast('Saved ✔️');
+        if (window.showToast) window.showToast('Saved ✔️');
       }
     });
 
@@ -135,15 +140,15 @@
       if (!e.detail || !e.detail.elt) return;
       const el = e.detail.elt;
       if (el.getAttribute('hx-post') === '/mood' && e.detail.xhr.status >= 200 && e.detail.xhr.status < 300) {
-        document.body.__x.$data.showToast('Saved ✔️');
+        if (window.showToast) window.showToast('Saved ✔️');
       }
     });
 
     /* Error toast for non-200 responses */
     htmx.on('htmx:responseError', e => {
-      if (document.body.__x && e.detail) {
+      if (window.showToast && e.detail) {
         const code = e.detail.xhr.status;
-        document.body.__x.$data.showToast(`Save failed (${code})`, true);
+        window.showToast(`Save failed (${code})`, true);
       }
     });
   </script>

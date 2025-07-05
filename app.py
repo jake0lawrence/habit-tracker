@@ -53,14 +53,17 @@ def save_data(data):
         json.dump(data, f, indent=2)
 
 
-def get_week_range():
+def get_week_range() -> list[datetime.date]:
+    """Return the seven-day range for the current week starting Monday."""
     today = datetime.date.today()
     start = today - datetime.timedelta(days=today.weekday())
     return [start + datetime.timedelta(days=i) for i in range(7)]
 
 
-def calculate_habit_stats(all_data, week):
-    """Return streak and average duration per habit."""
+def calculate_habit_stats(
+    all_data: dict[str, dict], week: list[datetime.date]
+) -> dict[str, dict]:
+    """Return per-habit streak length and average duration for the week."""
     stats = {}
     config = load_config()
     today = datetime.date.today()
@@ -127,7 +130,8 @@ def calculate_mood_stats(data):
     }
 
 
-def load_config():
+def load_config() -> dict[str, dict]:
+    """Load habit configuration from disk or return defaults."""
     if CONFIG_FILE.exists():
         try:
             with open(CONFIG_FILE) as f:
@@ -140,7 +144,8 @@ def load_config():
     }
 
 
-def save_config(cfg):
+def save_config(cfg: dict[str, dict]) -> None:
+    """Persist habit configuration to disk."""
     with open(CONFIG_FILE, "w") as f:
         json.dump(cfg, f, indent=2)
 

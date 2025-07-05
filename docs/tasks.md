@@ -11,10 +11,10 @@
   - [ ] Replace path handling in `habit.py` and `storage.py`  
   - [ ] Allow `HABIT_DATA_PATH` env var to override default location  
 
-- [ ] 🟢 **Add docstrings + type hints**  
-  - [ ] `get_week_range`  
-  - [ ] `calculate_habit_stats`  
-  - [ ] `load_config` / `save_config`  
+- [x] 🟢 **Add docstrings + type hints**
+  - [x] `get_week_range`
+  - [x] `calculate_habit_stats`
+  - [x] `load_config` / `save_config`
 
 - [ ] 🔶 **Centralise storage adapter**  
   - [ ] Move JSON + SQLite helpers into `storage.py`  
@@ -80,7 +80,7 @@
 
 | Area | Completed | Remaining |
 |------|-----------|-----------|
-| Core Codebase | 0 / 3 | **3** |
+| Core Codebase | 1 / 3 | **2** |
 | Tests & CI    | 0 / 3 | **3** |
 | Web UI / PWA  | 0 / 3 | **3** |
 | Packaging & Docs | 0 / 2 | **2** |

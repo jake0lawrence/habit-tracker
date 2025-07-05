@@ -58,3 +58,33 @@ def test_log_invalid_duration(tmp_path):
     finally:
         app.DATA_FILE = orig_data
         app.CONFIG_FILE = orig_config
+
+
+def test_log_update_entry(tmp_path):
+    orig_data = app.DATA_FILE
+    orig_config = app.CONFIG_FILE
+    app.DATA_FILE = tmp_path / "data.json"
+    app.CONFIG_FILE = tmp_path / "config.json"
+    client = app.app.test_client()
+    try:
+        date = "2030-01-02"
+        backend = app.get_storage_backend()
+        backend.save_habit(date, "Meditation", 5, "old")
+
+        rv = client.post(
+            "/log",
+            data={
+                "habit": "Meditation",
+                "duration": "10",
+                "note": "updated",
+                "date": date,
+                "entry_id": f"{date}_Meditation",
+            },
+        )
+        assert rv.status_code == 200
+        data = backend.load_all()
+        assert data[date]["Meditation"]["duration"] == 10
+        assert data[date]["Meditation"]["note"] == "updated"
+    finally:
+        app.DATA_FILE = orig_data
+        app.CONFIG_FILE = orig_config
