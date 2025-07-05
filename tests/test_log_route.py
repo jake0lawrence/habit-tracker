@@ -5,6 +5,7 @@ import app
 def test_log_save(tmp_path):
     orig_data = app.DATA_FILE
     orig_config = app.CONFIG_FILE
+    orig_login_disabled = app.app.config.get("LOGIN_DISABLED")
     app.DATA_FILE = tmp_path / "data.json"
     app.CONFIG_FILE = tmp_path / "config.json"
     client = app.app.test_client()
@@ -20,11 +21,13 @@ def test_log_save(tmp_path):
     finally:
         app.DATA_FILE = orig_data
         app.CONFIG_FILE = orig_config
+        app.app.config["LOGIN_DISABLED"] = orig_login_disabled
 
 
 def test_log_missing_duration(tmp_path):
     orig_data = app.DATA_FILE
     orig_config = app.CONFIG_FILE
+    orig_login_disabled = app.app.config.get("LOGIN_DISABLED")
     app.DATA_FILE = tmp_path / "data.json"
     app.CONFIG_FILE = tmp_path / "config.json"
     client = app.app.test_client()
@@ -37,11 +40,13 @@ def test_log_missing_duration(tmp_path):
     finally:
         app.DATA_FILE = orig_data
         app.CONFIG_FILE = orig_config
+        app.app.config["LOGIN_DISABLED"] = orig_login_disabled
 
 
 def test_log_invalid_duration(tmp_path):
     orig_data = app.DATA_FILE
     orig_config = app.CONFIG_FILE
+    orig_login_disabled = app.app.config.get("LOGIN_DISABLED")
     app.DATA_FILE = tmp_path / "data.json"
     app.CONFIG_FILE = tmp_path / "config.json"
     client = app.app.test_client()
@@ -58,11 +63,13 @@ def test_log_invalid_duration(tmp_path):
     finally:
         app.DATA_FILE = orig_data
         app.CONFIG_FILE = orig_config
+        app.app.config["LOGIN_DISABLED"] = orig_login_disabled
 
 
 def test_log_update_entry(tmp_path):
     orig_data = app.DATA_FILE
     orig_config = app.CONFIG_FILE
+    orig_login_disabled = app.app.config.get("LOGIN_DISABLED")
     app.DATA_FILE = tmp_path / "data.json"
     app.CONFIG_FILE = tmp_path / "config.json"
     client = app.app.test_client()
@@ -88,3 +95,4 @@ def test_log_update_entry(tmp_path):
     finally:
         app.DATA_FILE = orig_data
         app.CONFIG_FILE = orig_config
+        app.app.config["LOGIN_DISABLED"] = orig_login_disabled
