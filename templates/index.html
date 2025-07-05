@@ -10,7 +10,7 @@
   <script id="mood-data" type="application/json">{{ mood_stats | tojson }}</script>
 {% endblock %}
 
-{% block body_attrs %}x-data="getAppState()" x-init="init(); $watch('dark', v => localStorage.setItem('darkMode', v))" :class="{ dark }"{% endblock %}
+{% block body_attrs %}x-data="getAppState()" x-init="$watch('dark', v => localStorage.setItem('darkMode', v))" :class="{ dark }"{% endblock %}
 
 {% block content %}
   {# ───── Header config for the partial ───── #}
@@ -118,10 +118,6 @@
           this.toast.show    = true;
           setTimeout(() => this.toast.show = false, 3000);
         }
-        ,
-        init() {
-          window.showToast = (msg, err=false) => this.showToast(msg, err);
-        }
       }
     }
   </script>
@@ -131,7 +127,7 @@
     htmx.on('htmx:afterSwap', e => {
       if (!e.detail || !e.detail.target) return;
       if (e.detail.target.id === 'habit-grid') {
-        if (window.showToast) window.showToast('Saved ✔️');
+        document.body.__x.$data.showToast('Saved ✔️');
       }
     });
 
@@ -140,15 +136,15 @@
       if (!e.detail || !e.detail.elt) return;
       const el = e.detail.elt;
       if (el.getAttribute('hx-post') === '/mood' && e.detail.xhr.status >= 200 && e.detail.xhr.status < 300) {
-        if (window.showToast) window.showToast('Saved ✔️');
+        document.body.__x.$data.showToast('Saved ✔️');
       }
     });
 
     /* Error toast for non-200 responses */
     htmx.on('htmx:responseError', e => {
-      if (window.showToast && e.detail) {
+      if (document.body.__x && e.detail) {
         const code = e.detail.xhr.status;
-        window.showToast(`Save failed (${code})`, true);
+        document.body.__x.$data.showToast(`Save failed (${code})`, true);
       }
     });
   </script>
