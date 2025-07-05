@@ -20,6 +20,8 @@ def load_user(user_id):
     return SimpleUser(user_id)
 
 app = Flask(__name__)
+login_manager = LoginManager()
+password_hasher = PasswordHasher()
 
 
 def create_app(mode=None):
@@ -32,7 +34,9 @@ def create_app(mode=None):
         app.config.from_object(DevConfig)
     app.config["APP_MODE"] = mode
     app.config["PWA_ENABLED"] = mode == "prod"
+    app.secret_key = os.getenv("SECRET_KEY", "dev-key")
     login_manager.init_app(app)
+    login_manager.login_view = "login"
     return app
 
 
@@ -50,6 +54,41 @@ HABITS = {
     "weights": "Weights",
     "read": "Read",
 }
+
+
+class User(UserMixin):
+    def __init__(self, id, email, password_hash):
+        self.id = id
+        self.email = email
+        self.password_hash = password_hash
+
+
+class SignupForm(FlaskForm):
+    email = StringField("Email", validators=[DataRequired(), Email()])
+    password = PasswordField(
+        "Password", validators=[DataRequired(), Length(min=6)]
+    )
+    confirm = PasswordField(
+        "Confirm", validators=[DataRequired(), EqualTo("password")]
+    )
+
+
+class LoginForm(FlaskForm):
+    email = StringField("Email", validators=[DataRequired(), Email()])
+    password = PasswordField("Password", validators=[DataRequired()])
+
+
+@login_manager.user_loader
+def load_user(user_id):
+    backend = get_storage_backend()
+    data = backend.get_user(int(user_id))
+    if data:
+        return User(data["id"], data["email"], data["password_hash"])
+    return None
+
+
+def current_uid():
+    return current_user.id if getattr(current_user, "is_authenticated", False) else 1
 
 
 def load_data():
@@ -218,24 +257,51 @@ def get_storage_backend():
     return storage.get_backend(json_path=str(DATA_FILE))
 
 
+@app.route("/signup", methods=["GET", "POST"])
+def signup():
+    form = SignupForm()
+    if form.validate_on_submit():
+        backend = get_storage_backend()
+        existing = backend.get_user_by_email(form.email.data)
+        if existing:
+            return render_template("signup.html", form=form, message="Email already registered")
+        pw_hash = password_hasher.hash(form.password.data)
+        user_id = backend.create_user(form.email.data, pw_hash)
+        user = User(user_id, form.email.data, pw_hash)
+        login_user(user)
+        return redirect("/")
+    return render_template("signup.html", form=form, message=None)
+
+
 @app.route("/login", methods=["GET", "POST"])
 def login():
-    if request.method == "POST":
-        username = request.form.get("username", "user")
-        user = SimpleUser(username)
-        login_user(user, remember=True)
-        return redirect("/")
-    return render_template("login.html")
+    form = LoginForm()
+    if form.validate_on_submit():
+        backend = get_storage_backend()
+        data = backend.get_user_by_email(form.email.data)
+        if data and password_hasher.verify(data["password_hash"], form.password.data):
+            user = User(data["id"], data["email"], data["password_hash"])
+            login_user(user)
+            return redirect("/")
+        return render_template("login.html", form=form, message="Invalid credentials")
+    return render_template("login.html", form=form, message=None)
+
+
+@app.route("/logout")
+def logout():
+    logout_user()
+    return redirect("/login")
 
 
 @app.route("/")
+@login_required
 def index():
     debug_mode = request.args.get("debug") == "true"
     today = datetime.date.today()
     week = get_week_range()
     backend = get_storage_backend()
-    data = backend.get_range(str(week[0]), str(week[-1]))
-    all_data = backend.load_all()
+    data = backend.get_range(str(week[0]), str(week[-1]), current_uid())
+    all_data = backend.load_all(current_uid())
     mood = data.get(str(today), {}).get("mood")
     mood_stats = calculate_mood_stats(all_data)
     config = load_config()
@@ -254,6 +320,7 @@ def index():
 
 
 @app.post("/log")
+@login_required
 def log_habit():
     habit = request.form.get("habit")
     duration_str = request.form.get("duration")
@@ -273,12 +340,12 @@ def log_habit():
 
     backend = get_storage_backend()
     if request.args.get("delete") == "1":
-        backend.delete_habit(target_date, habit)
+        backend.delete_habit(target_date, habit, current_uid())
     else:
-        backend.save_habit(target_date, habit, duration, note)
+        backend.save_habit(target_date, habit, duration, note, current_uid())
 
     week = get_week_range()
-    data = backend.get_range(str(week[0]), str(week[-1]))
+    data = backend.get_range(str(week[0]), str(week[-1]), current_uid())
     config = load_config()
     grid = render_template(
         "_habit_row.html",
@@ -291,6 +358,7 @@ def log_habit():
 
 
 @app.route("/mood", methods=["POST"])
+@login_required
 def log_mood():
     score_str = request.form.get("score")
     if score_str is None:
@@ -303,7 +371,7 @@ def log_mood():
         return {"status": "error", "message": "invalid score"}, 400
     backend = get_storage_backend()
     today = str(datetime.date.today())
-    backend.save_mood(today, score)
+    backend.save_mood(today, score, current_uid())
     return {"status": "ok", "score": score}
 
 
@@ -335,13 +403,14 @@ def export_csv():
 
 
 @app.route("/analytics")
+@login_required
 def analytics():
     debug_mode = request.args.get("debug") == "true"
     backend = get_storage_backend()
     week = get_week_range()
-    data = backend.get_range(str(week[0]), str(week[-1]))
+    data = backend.get_range(str(week[0]), str(week[-1]), current_uid())
     config = load_config()
-    all_data = backend.load_all()
+    all_data = backend.load_all(current_uid())
     mood_series = [
         {"date": d, "score": entry["mood"]}
         for d, entry in all_data.items()
@@ -369,6 +438,7 @@ def analytics():
 
 
 @app.route("/journal")
+@login_required
 def journal():
     data = load_data()
     base_prompt = generate_journal_prompt(data)
@@ -395,6 +465,7 @@ def download_journal():
 
 
 @app.route("/journal-entry", methods=["POST"])
+@login_required
 def save_journal():
     entry = request.form["entry"]
     today = datetime.date.today().isoformat()
@@ -404,6 +475,7 @@ def save_journal():
 
 
 @app.route("/journal-history")
+@login_required
 def journal_history():
     if not JOURNAL_FILE.exists():
         return render_template("journal_history.html", entries=[])
@@ -429,6 +501,7 @@ def journal_history():
 
 
 @app.route("/settings", methods=["GET", "POST"])
+@login_required
 def settings():
     config = load_config()
     if request.method == "POST":
