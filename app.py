@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, redirect, send_file
-from flask_login import LoginManager, UserMixin, login_user
+from flask_login import LoginManager, UserMixin, login_user, login_required
 import json, os, datetime, csv
 from pathlib import Path
 from io import StringIO
@@ -308,6 +308,7 @@ def log_mood():
 
 
 @app.route("/export")
+@login_required
 def export_csv():
     backend = get_storage_backend()
     week = get_week_range()
