@@ -53,11 +53,26 @@ def save_data(data):
         json.dump(data, f, indent=2)
 
 
-def get_week_range() -> list[datetime.date]:
-    """Return the seven-day range for the current week starting Monday."""
+def monday_of_current_week() -> datetime.date:
+    """Return Monday of the current week."""
     today = datetime.date.today()
-    start = today - datetime.timedelta(days=today.weekday())
+    return today - datetime.timedelta(days=today.weekday())
+
+
+def get_week_range(offset: int = 0) -> list[datetime.date]:
+    """Return seven dates starting Monday with an optional day offset."""
+    start = monday_of_current_week() + datetime.timedelta(days=offset)
     return [start + datetime.timedelta(days=i) for i in range(7)]
+
+
+def format_week_label(start: datetime.date) -> str:
+    """Return a human-readable label like 'Jul 1 – Jul 7, 2025'."""
+    end = start + datetime.timedelta(days=6)
+    if start.year == end.year:
+        if start.month == end.month:
+            return f"{start.strftime('%b')} {start.day} – {end.day}, {start.year}"
+        return f"{start.strftime('%b %d')} – {end.strftime('%b %d, %Y')}"
+    return f"{start.strftime('%b %d, %Y')} – {end.strftime('%b %d, %Y')}"
 
 
 def calculate_habit_stats(
@@ -224,8 +239,35 @@ def index():
         mood=mood,
         mood_stats=mood_stats,
         week=week,
+        week_label=format_week_label(week[0]),
         stats=stats,
         debug=debug_mode,
+    )
+
+
+@app.route("/grid")
+def grid():
+    """Return the habit grid for a week offset in days."""
+    try:
+        offset = int(request.args.get("offset", 0))
+    except ValueError:
+        offset = 0
+    week = get_week_range(offset)
+    backend = get_storage_backend()
+    data = backend.get_range(str(week[0]), str(week[-1]))
+    config = load_config()
+    grid = render_template(
+        "_habit_row.html",
+        habits=config,
+        data=data,
+        week=week,
+        today=str(datetime.date.today()),
+    )
+    label = format_week_label(week[0])
+    return render_template(
+        "_grid_wrapper.html",
+        grid=grid,
+        week_label=label,
     )
 
 
@@ -263,7 +305,13 @@ def log_habit():
         week=week,
         today=str(datetime.date.today()),
     )
-    return f'<div id="habit-grid">{grid}</div>'
+    label = format_week_label(week[0])
+    wrapper = render_template(
+        "_grid_wrapper.html",
+        grid=grid,
+        week_label=label,
+    )
+    return wrapper
 
 
 @app.route("/mood", methods=["POST"])

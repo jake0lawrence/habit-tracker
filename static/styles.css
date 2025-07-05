@@ -121,6 +121,22 @@ body.dark .cell-done {
   background-color: #2e8b57;
 }
 
+/* Week navigation */
+.week-nav {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5em;
+  margin-top: 0.5em;
+}
+.week-nav button {
+  padding: 0 0.6em;
+  font-size: 1.2em;
+}
+.week-label {
+  font-weight: bold;
+}
+
 /* Entry Summary and Edit Button */
 .entry-summary {
   display: flex;
