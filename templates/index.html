@@ -17,7 +17,7 @@
 {% endblock %}
 
 {% block content %}
-  {# ───── Header config for the partial ───── #}
+  {# ───── Header ───── #}
   {% set header_title         = '🤖 Habit Tracker' %}
   {% set show_theme_toggle    = True %}
   {% set show_export          = True %}
@@ -27,7 +27,7 @@
   {% set show_print           = True %}
   {% include "_header.html" %}
 
-  <!-- ── Summary tiles ──────────────────────────────────────────────── -->
+  <!-- ── Summary tiles ─────────────────────────────────────────────── -->
   <section class="summary-tiles">
   {% for key, info in stats.items() %}
     <div class="tile">
@@ -38,7 +38,7 @@
   {% endfor %}
   </section>
 
-  <!-- ── Weekly grid with navigation ────────────────────────────────── -->
+  <!-- ── Weekly grid & navigation ──────────────────────────────────── -->
   <section>
     <h2>🗓️ Weekly Habit Grid</h2>
 
@@ -49,28 +49,24 @@
              weekLabel = $event.detail.target.dataset.weekLabel;
            }">
 
-      <!-- Previous week -->
+      <!-- Prev -->
       <button
         @click="offset -= 7"
         hx-get="/grid"
-        hx-vals="js:{offset: this.closest('#week-nav').__x.$data.offset - 7}"
+        x-bind:hx-vals="{ offset: offset }"
         hx-target="#habit-grid"
-        hx-swap="outerHTML">
-        ‹
-      </button>
+        hx-swap="outerHTML">‹</button>
 
       <span x-text="weekLabel"></span>
 
-      <!-- Next week -->
+      <!-- Next -->
       <button
         :disabled="offset === 0"
         @click="offset += 7"
         hx-get="/grid"
-        hx-vals="js:{offset: this.closest('#week-nav').__x.$data.offset + 7}"
+        x-bind:hx-vals="{ offset: offset }"
         hx-target="#habit-grid"
-        hx-swap="outerHTML">
-        ›
-      </button>
+        hx-swap="outerHTML">›</button>
     </div>
 
     <div id="habit-grid" data-week-label="{{ week_label }}">
@@ -79,7 +75,7 @@
     </div>
   </section>
 
-  <!-- ── Mood slider ────────────────────────────────────────────────── -->
+  <!-- ── Mood slider ──────────────────────────────────────────────── -->
   <section class="mood-block">
     <h2>🧠 Mood Score</h2>
     <form hx-post="/mood"
@@ -100,7 +96,7 @@
     </div>
   </section>
 
-  <!-- ── Log modal ──────────────────────────────────────────────────── -->
+  <!-- ── Log modal ─────────────────────────────────────────────────── -->
   <div class="modal" x-show="showModal" @keydown.escape.window="showModal=false" style="display:none">
     <div class="modal-content" @click.outside="showModal=false">
       <h3 x-text="form.label"></h3>
@@ -117,7 +113,7 @@
         <input type="hidden" name="date"     :value="form.date">
         <input type="hidden" name="entry_id" :value="form.entry_id">
 
-        <label>Duration (minutes):</label>
+        <label>Duration&nbsp;(minutes):</label>
         <input type="number" name="duration" x-model="form.duration" min="1" required>
 
         <label>Note:</label>
@@ -131,12 +127,12 @@
     </div>
   </div>
 
-  <!-- ── Toast element ──────────────────────────────────────────────── -->
+  <!-- ── Toast ─────────────────────────────────────────────────────── -->
   <div x-ref="toast" :class="{'toast': true, 'show': toast.show, 'error': toast.error}">
     <span x-text="toast.message"></span>
   </div>
 
-  <!-- ── Alpine helpers & HTMX hooks ────────────────────────────────── -->
+  <!-- ── Alpine helpers & HTMX hooks ───────────────────────────────── -->
   <script>
     function getAppState () {
       return {
@@ -158,7 +154,7 @@
           setTimeout(() => this.toast.show = false, 3000);
         },
         init() {
-          /* expose a global helper so HTMX hooks can call it */
+          /* expose helper to global so HTMX can use it */
           window.showToast = (msg, err=false) => this.showToast(msg, err);
         }
       }
@@ -166,14 +162,12 @@
   </script>
 
   <script>
-    /* Toast after habit-grid swap */
+    /* Toasts */
     htmx.on('htmx:afterSwap', e => {
       if (e.detail?.target?.id === 'habit-grid') {
         window.showToast?.('Saved ✔️');
       }
     });
-
-    /* Toast after mood save */
     htmx.on('htmx:afterRequest', e => {
       const el = e.detail?.elt;
       if (el?.getAttribute('hx-post') === '/mood' &&
@@ -181,8 +175,6 @@
         window.showToast?.('Saved ✔️');
       }
     });
-
-    /* Error toast */
     htmx.on('htmx:responseError', e => {
       const code = e.detail?.xhr?.status;
       window.showToast?.(`Save failed (${code})`, true);
