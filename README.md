@@ -50,7 +50,7 @@ Log habits & moods in seconds, jot AI-seeded journal entries, and review analyti
 git clone https://github.com/jake0lawrence/habit-track-cli.git
 cd habit-track-cli
 python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
+pip install -r requirements.txt  # installs Flask-Login & passlib too
 # ⬇️ Optional: enable AI journal prompts
 export OPENAI_API_KEY=sk-********************************
 # Choose config via APP_MODE (dev | prod)
@@ -61,14 +61,21 @@ python app.py   # auto-reload in dev mode
 
 Open [http://localhost:5000](http://localhost:5000) & start tracking.
 
+## 🔐 Sign Up & Log In
+
+The web UI now supports accounts. Head to `/signup` to create a user and then
+log in via `/login`. Passwords are hashed with **passlib[bcrypt]** and sessions
+are managed by **Flask-Login**. Existing data from older versions is migrated to
+the first account automatically.
+
 ---
 
 ## 🧪 Tests
 
 ```bash
-pytest -q                                   # unit tests
-npm ci && npx playwright install --with-deps # one-time browser install
-npm run e2e                                  # E2E smoke (skips if missing)
+pip install -r requirements.txt  # install Flask, Flask-Login, passlib & friends
+pytest -q                     # unit tests
+npm ci && npx playwright test # E2E smoke
 ```
 
 Playwright downloads browser binaries (~200 MB).
@@ -109,6 +116,7 @@ Need one-click? See `/docs/deploy-render.md`.
 | Layer             | Library                             |
 | ----------------- | ----------------------------------- |
 | Backend           | Flask 2.x                           |
+| Auth              | Flask-Login • passlib[bcrypt]        |
 | Frontend micro-JS | htmx 1.9 • Alpine 3.13              |
 | Charts            | Chart.js 4 (deferred import)        |
 | Styling           | Vanilla CSS (dark-mode class)       |
@@ -141,6 +149,8 @@ Happy tracking & journaling!
 
 * New **Journal** section in the feature table + env var note  
 * `/journal`, `/journal-history`, `/analytics` explained  
-* Toasts & Chart.js called out  
-* OpenAI API setup documented  
+* Toasts & Chart.js called out
+* OpenAI API setup documented
 * FAQ updated accordingly
+* Sign-up/login instructions & new auth dependencies
+* Database tables updated with user references
