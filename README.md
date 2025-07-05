@@ -66,9 +66,13 @@ Open [http://localhost:5000](http://localhost:5000) & start tracking.
 ## 🧪 Tests
 
 ```bash
-pytest -q                     # unit tests
-npm ci && npx playwright test # E2E smoke
+pytest -q                                   # unit tests
+npm ci && npx playwright install --with-deps # one-time browser install
+npm run e2e                                  # E2E smoke (skips if missing)
 ```
+
+Playwright downloads browser binaries (~200 MB).
+If the packages aren't installed, `npm run e2e` exits without failing.
 
 ---
 
