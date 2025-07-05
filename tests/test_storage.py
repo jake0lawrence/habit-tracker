@@ -20,6 +20,18 @@ def test_sqlite_mood_cycle(tmp_path):
     assert series[-1] == {"date": "2025-06-19", "score": 4}
 
 
+def test_user_id_columns_added(tmp_path):
+    """Migration adds user_id columns on init."""
+    db = SQLiteBackend(db_path=tmp_path / "schema.db")
+    cur = db.conn.cursor()
+    cur.execute("PRAGMA table_info(habit_log)")
+    cols = [r[1] for r in cur.fetchall()]
+    assert "user_id" in cols
+    cur.execute("PRAGMA table_info(mood_log)")
+    cols = [r[1] for r in cur.fetchall()]
+    assert "user_id" in cols
+
+
 def test_get_backend_postgres_failure(monkeypatch, caplog):
     """Fallback to SQLite if Postgres connection errors."""
     monkeypatch.setenv("DATABASE_URL", "postgres://bad")
