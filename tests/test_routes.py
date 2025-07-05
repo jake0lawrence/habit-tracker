@@ -11,6 +11,7 @@ def make_client(tmp_path):
     orig_config = flask_app_module.CONFIG_FILE
     flask_app_module.DATA_FILE = tmp_path / "data.json"
     flask_app_module.CONFIG_FILE = tmp_path / "config.json"
+    flask_app_module.app.config["LOGIN_DISABLED"] = True
     client = flask_app_module.app.test_client()
     return client, orig_data, orig_config
 
@@ -18,6 +19,7 @@ def make_client(tmp_path):
 def restore(orig_data, orig_config):
     flask_app_module.DATA_FILE = orig_data
     flask_app_module.CONFIG_FILE = orig_config
+    flask_app_module.app.config["LOGIN_DISABLED"] = False
 
 
 def read_json(path: Path):
@@ -245,4 +247,17 @@ def test_journal_history(tmp_path):
         assert res.status_code == 200
     finally:
         flask_app_module.JOURNAL_FILE = orig_journal
+        restore(orig_data, orig_config)
+
+
+def test_export_requires_login(tmp_path):
+    client, orig_data, orig_config = make_client(tmp_path)
+    try:
+        res = client.get("/export")
+        assert res.status_code == 401
+        client.post("/login", data={"username": "tester"})
+        res = client.get("/export")
+        assert res.status_code == 200
+        assert res.mimetype == "text/csv"
+    finally:
         restore(orig_data, orig_config)

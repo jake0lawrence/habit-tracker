@@ -54,7 +54,7 @@ pip install -r requirements.txt  # installs Flask-Login & passlib too
 # ⬇️ Optional: enable AI journal prompts
 export OPENAI_API_KEY=sk-********************************
 # Choose config via APP_MODE (dev | prod)
-export APP_MODE=dev
+export APP_MODE=dev  # uses local JSON storage (no accounts)
 
 python app.py   # auto-reload in dev mode
 ````
@@ -63,10 +63,11 @@ Open [http://localhost:5000](http://localhost:5000) & start tracking.
 
 ## 🔐 Sign Up & Log In
 
-The web UI now supports accounts. Head to `/signup` to create a user and then
-log in via `/login`. Passwords are hashed with **passlib[bcrypt]** and sessions
-are managed by **Flask-Login**. Existing data from older versions is migrated to
-the first account automatically.
+The web UI now supports accounts *(SQLite/Postgres only)*. Head to `/signup` to
+create a user and then log in via `/login`. Passwords are hashed with
+**passlib[bcrypt]** and sessions are managed by **Flask-Login**. Existing data
+from older versions is migrated to the first account automatically. JSON-based
+`APP_MODE=dev` skips this feature.
 
 ---
 
