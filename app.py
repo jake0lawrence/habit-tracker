@@ -1,11 +1,14 @@
 from flask import Flask, render_template, request, redirect, send_file
-from flask_login import LoginManager, UserMixin, login_user, login_required
+from flask_login import LoginManager, UserMixin, login_user
+from argon2 import PasswordHasher, exceptions as argon2_exceptions
 import json, os, datetime, csv
 from pathlib import Path
 from io import StringIO
 from config import DevConfig, ProdConfig
 import storage
 import openai
+
+password_hasher = PasswordHasher()
 
 login_manager = LoginManager()
 
@@ -18,6 +21,7 @@ class SimpleUser(UserMixin):
 @login_manager.user_loader
 def load_user(user_id):
     return SimpleUser(user_id)
+
 
 app = Flask(__name__)
 login_manager = LoginManager()
@@ -192,8 +196,7 @@ def load_config() -> dict[str, dict]:
         except json.JSONDecodeError:
             return {}
     return {
-        key: {"label": label, "default_duration": 15}
-        for key, label in HABITS.items()
+        key: {"label": label, "default_duration": 15} for key, label in HABITS.items()
     }
 
 
@@ -243,8 +246,15 @@ def enrich_prompt_with_ai(prompt):
         completion = openai.ChatCompletion.create(
             model=model,
             messages=[
-                {"role": "system", "content": "You are a thoughtful self-reflection assistant."},
-                {"role": "user", "content": prompt + "\nPlease expand this into a personal reflection prompt."},
+                {
+                    "role": "system",
+                    "content": "You are a thoughtful self-reflection assistant.",
+                },
+                {
+                    "role": "user",
+                    "content": prompt
+                    + "\nPlease expand this into a personal reflection prompt.",
+                },
             ],
         )
         return completion.choices[0].message["content"].strip()
@@ -275,23 +285,19 @@ def signup():
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
-    form = LoginForm()
-    if form.validate_on_submit():
-        backend = get_storage_backend()
-        data = backend.get_user_by_email(form.email.data)
-        if data and password_hasher.verify(data["password_hash"], form.password.data):
-            user = User(data["id"], data["email"], data["password_hash"])
-            login_user(user)
-            return redirect("/")
-        return render_template("login.html", form=form, message="Invalid credentials")
-    return render_template("login.html", form=form, message=None)
-
-
-@app.route("/logout")
-def logout():
-    logout_user()
-    return redirect("/login")
-
+    if request.method == "POST":
+        username = request.form.get("username", "user")
+        password = request.form.get("password", "")
+        stored_hash = os.getenv("PASSWORD_HASH")
+        if stored_hash:
+            try:
+                password_hasher.verify(stored_hash, password)
+            except argon2_exceptions.VerificationError:
+                return render_template("login.html", message="Invalid credentials")
+        user = SimpleUser(username)
+        login_user(user, remember=True)
+        return redirect("/")
+    return render_template("login.html")
 
 @app.route("/")
 @login_required
@@ -456,6 +462,7 @@ def download_journal():
 
     if format == "zip":
         from zipfile import ZipFile
+
         zip_path = Path("journal.zip")
         with ZipFile(zip_path, "w") as zipf:
             zipf.write(path)
@@ -522,17 +529,18 @@ def settings():
 
 if __name__ == "__main__":
     import argparse
+
     parser = argparse.ArgumentParser(description="Run the Flask web UI")
     parser.add_argument(
         "--mode",
         choices=["prod", "dev", "test"],
         default=os.environ.get("APP_MODE", "prod"),
-        help="Execution mode; disables PWA unless 'prod'"
+        help="Execution mode; disables PWA unless 'prod'",
     )
     parser.add_argument(
         "--debug",
         action="store_true",
-        help="Enable Flask debug mode (overrides $DEBUG)"
+        help="Enable Flask debug mode (overrides $DEBUG)",
     )
     args = parser.parse_args()
 

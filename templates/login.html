@@ -1,12 +1,12 @@
 {% extends "base.html" %}
 {% block content %}
-  {% set header_title = 'Login' %}
-  {% include "_header.html" %}
+  <h2>Login</h2>
+  {% if message %}
+    <p style="color: red;">{{ message }}</p>
+  {% endif %}
   <form method="post">
-    {{ form.hidden_tag() }}
-    {% if message %}<p>{{ message }}</p>{% endif %}
-    <p>{{ form.email.label }} {{ form.email() }}</p>
-    <p>{{ form.password.label }} {{ form.password() }}</p>
+    <input type="text" name="username" placeholder="Username">
+    <input type="password" name="password" placeholder="Password">
     <button type="submit">Login</button>
   </form>
   <p>No account? <a href="/signup">Sign up</a></p>
