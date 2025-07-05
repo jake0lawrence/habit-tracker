@@ -196,3 +196,4 @@ cython_debug/
 
 # Habit tracker data directory
 data/
+node_modules/

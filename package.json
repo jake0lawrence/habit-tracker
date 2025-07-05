@@ -5,6 +5,7 @@
     "@playwright/test": "^1.40.0"
   },
   "scripts": {
-    "test": "playwright test"
+    "test": "playwright test",
+    "e2e": "node scripts/run_e2e.js"
   }
 }
